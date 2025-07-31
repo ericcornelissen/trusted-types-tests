@@ -1,0 +1,11 @@
+:root { background-color:#fff; color:#000; }
+.covered { background-color:#d9ead3 }
+.not-covered { background-color:#f4cccc }
+.other { background-color:#fce5cd }
+
+@media (prefers-color-scheme: dark) {
+  :root { background-color:#111; color:#fff; }
+  .covered { background-color:#38761d }
+  .not-covered { background-color:#990000 }
+  .other { background-color:#b45f06 }
+}

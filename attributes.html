@@ -1,0 +1,218 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="trusted-types test-policy; require-trusted-types-for 'script';"
+  />
+
+  <link
+    rel="stylesheet"
+    href="./styles.css"
+  >
+
+  <script
+    src="./helpers.js"
+  >
+  </script>
+</head>
+
+<body>
+  <div>
+    <h1>Trusted Types Tests of Attributes</h1>
+    <p>
+      As is this page displays the coverage of element-specific attributes.
+      For full coverage:
+      <button
+        disabled
+        id="full-coverage"
+      >
+        click here
+      </button>
+    </p>
+  </div>
+
+  <hr>
+
+  <div>
+    <p>
+      LEGEND:
+      <span class="covered">covered</span>: trusted types do apply.
+      <span class="not-covered">not covered</span>: trusted types does not apply.
+    </p>
+  </div>
+
+  <noscript>
+    <p>
+      This page tests <a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted Types</a>, which requires JavaScript to be enabled.
+      Please enable JavaScript to run the Trusted Types tests.
+    </p>
+  </noscript>
+
+  <div id="no-trusted-types" hidden>
+    This browser does not support Trusted Types. Trusted Types tests cannot be
+    run. Please switch to a
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API#browser_compatibility"
+    >browser with Trusted Types support</a>.
+  </div>
+
+  <div id="covered"></div>
+  <div id="caught"></div>
+  <div id="uncovered"></div>
+  <div id="shadow" hidden></div>
+
+  <script type="module">
+  let baseObject = HTMLElement;
+
+  const shadow = document.getElementById("shadow").attachShadow({ mode: "open" });
+  const $covered = document.getElementById("covered");
+  const $caught = document.getElementById("caught");
+  const $uncovered = document.getElementById("uncovered");
+  const $btn = document.getElementById("full-coverage");
+
+  if (hasTrustedTypes()) {
+    for (const element of getHTMLElements()) {
+      await test(element);
+    }
+
+    $btn.disabled = false;
+  } else {
+    document.getElementById("no-trusted-types").hidden = false;
+  }
+
+  $btn.addEventListener("click", async () => {
+    $btn.disabled = true;
+
+    // Change the base object in order to cover all attributes
+    baseObject = Object;
+
+    // Reset the results
+    $covered.innerText = "";
+    $caught.innerText = "";
+    $uncovered.innerText = "";
+
+    // Re-run the tests
+    for (const elementClass of getHTMLElements()) {
+      await test(elementClass);
+    }
+  });
+
+  // ---
+
+  function test(elementClass) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        _test(elementClass);
+        resolve();
+      }, 1);
+    });
+  }
+
+  function _test(elementClass) {
+    const tagName = elementClassToTagName(elementClass);
+    const el = createTestElement(tagName);
+    for (const attr of getElementAttributeProperties(el)) {
+      const name = `${elementClass}.${attr}=.`;
+
+      const $result = document.createElement("p");
+      $result.innerText = `\`${name}\` - `;
+
+      try {
+        const el = createTestElement(tagName);
+        el[attr] = "untrusted";
+
+        $result.innerText += "not covered";
+        $result.classList.add("not-covered");
+        $uncovered.appendChild($result);
+      } catch (error) {
+        if (error.message.includes("requires 'Trusted")) {
+          $result.innerText += "covered";
+          $result.classList.add("covered");
+          $covered.appendChild($result);
+        } else {
+          const $message = document.createElement("i");
+          $message.innerText = `${error.message}`;
+          $result.appendChild($message);
+          $result.classList.add("other");
+          $caught.appendChild($result);
+        }
+      }
+    }
+  }
+
+  function elementClassToTagName(element) {
+    const tagName = element
+      .replace(/^HTML/, "")
+      .replace(/Element$/, "")
+      .toLowerCase();
+
+    const corrections = {
+      anchor: "a",
+      dlist: "dl",
+      olist: "ol",
+      ulist: "ul",
+    };
+    if (Object.hasOwn(corrections, tagName)) {
+      return corrections[tagName];
+    }
+
+    return tagName;
+  }
+
+  function getHTMLElements() {
+    return Reflect.ownKeys(window)
+      .filter(key => {
+        const value = window[key];
+        return typeof value === "function" &&
+          value.prototype instanceof HTMLElement &&
+          key.startsWith("HTML");
+      })
+      .toSorted();
+  }
+
+  function getElementAttributeProperties(element) {
+    const properties = new Set();
+
+    let proto = Object.getPrototypeOf(element);
+    while (proto && proto !== baseObject.prototype) {
+      for (const key of Object.getOwnPropertyNames(proto)) {
+        const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+        if (!descriptor) {
+          continue;
+        }
+
+        if (!descriptor.set && !descriptor.writable) {
+          continue;
+        }
+
+        if (typeof element[key] === "function") {
+          continue;
+        }
+
+        properties.add(key);
+      }
+
+      proto = Object.getPrototypeOf(proto);
+    }
+
+    return properties;
+  }
+  </script>
+
+  <hr>
+
+  <div>
+    <p>
+      The software is available under the
+      <a
+        href="./LICENSE"
+      >MPL-2.0 license</a>.
+    </p>
+  </div>
+</body>
+
+</html>

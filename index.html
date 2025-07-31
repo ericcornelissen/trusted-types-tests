@@ -9,63 +9,43 @@
     content="trusted-types test-policy; require-trusted-types-for 'script';"
   />
 
-  <style>
-  :root { background-color:#fff; color:#000; }
-  .covered { background-color:#d9ead3 }
-  .not-covered { background-color:#f4cccc }
-  .other { background-color:#fce5cd }
-  @media (prefers-color-scheme: dark) {
-    :root { background-color:#111; color:#fff; }
-    .covered { background-color:#38761d }
-    .not-covered { background-color:#990000 }
-    .other { background-color:#b45f06 }
-  }
-  </style>
+  <link
+    rel="stylesheet"
+    href="./styles.css"
+  >
 
-  <script>
-  function hasTrustedTypes() {
-    const result = typeof trustedTypes !== "undefined";
-
-    if (!result) {
-      const span1 = document.createTextNode("This browser does not support ");
-      const link2 = document.createElement("a");
-      link2.innerText = "Trusted Types";
-      link2.href = "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API";
-      const span3 = document.createTextNode(". Trusted Types tests cannot be run. Please switch to a ");
-      const link4 = document.createElement("a");
-      link4.innerText = "browser with Trusted Types support";
-      link4.href = "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API#browser_compatibility";
-      const span5 = document.createTextNode(".");
-
-      const message = document.createElement("p");
-      message.append(span1, link2, span3, link4, span5);
-      document.body.appendChild(message);
-    }
-
-    return result;
-  }
-  </script>
-  <script>
-  function createTestAttribute(attrName) {
-    const attr = document.createAttribute(attrName);
-    return attr;
-  }
-  function createTestElement(tagName) {
-    const $el = document.createElement(tagName);
-    shadow.appendChild($el);
-    return $el;
-  }
+  <script
+    src="./helpers.js"
+  >
   </script>
 </head>
 
 <body>
-  <p>
-    LEGEND:
-    <span class="covered">covered</span>: trusted types do apply.
-    <span class="not-covered">not covered</span>: trusted types does not apply.
-  </p>
+  <div>
+    <h1>Trusted Types Tests</h1>
+    <p>
+      This page tests a selected set of DOM APIs for
+      <a
+        href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"
+      >Trusted Types</a>
+      coverage.
+
+      For broader coverage, view the test suite of:
+      <a
+        href="./attributes.html"
+      >HTML element attributes</a>.
+    </p>
+  </div>
 
   <hr>
+
+  <div>
+    <p>
+      LEGEND:
+      <span class="covered">covered</span>: trusted types do apply.
+      <span class="not-covered">not covered</span>: trusted types does not apply.
+    </p>
+  </div>
 
   <noscript>
     <p>
@@ -74,15 +54,19 @@
     </p>
   </noscript>
 
-  <div id="shadow" style="display:none"></div>
+  <div id="no-trusted-types" hidden>
+    This browser does not support Trusted Types. Trusted Types tests cannot be
+    run. Please switch to a
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API#browser_compatibility"
+    >browser with Trusted Types support</a>.
+  </div>
+
+  <div id="shadow" hidden></div>
   <script>
   const shadow = document.getElementById("shadow").attachShadow({ mode: "open" });
 
   function test(name, cb, optionalMessage) {
-    if (!hasTrustedTypes) {
-      return;
-    }
-
     const providers = {
       // Attributes
       get attr() { return createTestAttribute("attr"); },
@@ -316,8 +300,21 @@
     test("new XMLHttpRequest().setRequestHeader(_, .)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.setRequestHeader(placeholder, untrusted); });
     test("Navigator.sendBeacon(., _)", () => navigator.sendBeacon(`http://${untrusted}`));
     test("Navigator.sendBeacon(_, )", () => navigator.sendBeacon("https://example.com/", untrusted));
+  } else {
+    document.getElementById("no-trusted-types").hidden = false;
   }
   </script>
+
+  <hr>
+
+  <div>
+    <p>
+      The software is available under the
+      <a
+        href="./LICENSE"
+      >MPL-2.0 license</a>.
+    </p>
+  </div>
 </body>
 
 </html>

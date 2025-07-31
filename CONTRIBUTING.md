@@ -18,8 +18,20 @@ If you decide to make a contribution, please do use the following workflow:
 
 ## Changing Tests
 
+### `index.html`
+
 To add a new test for an uncovered DOM API (or missing API parameter) add a new
 `test()` call to `index.html`. Please keep the test order alphabetical. If the
 test requires a specific element (or similar), add it to the `providers` object.
 
 Similarly, to update a test change an existing `test()` call in `index.html`.
+
+### `attributes.html`
+
+The HTML element attributes test suite was designed to not require manual
+changes. Still, you could:
+
+1. fix the `corrections` object,
+1. improve the automated selection of `attributes` to test,
+1. improve the automated selection of `HTMLElement`s to test,
+1. improve the test logic itself.
