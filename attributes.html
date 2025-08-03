@@ -13,11 +13,6 @@
     rel="stylesheet"
     href="./styles.css"
   >
-
-  <script
-    src="./helpers.js"
-  >
-  </script>
 </head>
 
 <body>
@@ -47,7 +42,11 @@
 
   <noscript>
     <p>
-      This page tests <a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted Types</a>, which requires JavaScript to be enabled.
+      This page tests
+      <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"
+      >Trusted Types</a>,
+      which requires JavaScript to be enabled.
       Please enable JavaScript to run the Trusted Types tests.
     </p>
   </noscript>
@@ -65,20 +64,13 @@
   <div id="uncovered"></div>
   <div id="shadow" hidden></div>
 
+  <script src="./helpers.js"></script>
   <script type="module">
   let baseObject = HTMLElement;
-
-  const shadow = document.getElementById("shadow").attachShadow({ mode: "open" });
-  const $covered = document.getElementById("covered");
-  const $caught = document.getElementById("caught");
-  const $uncovered = document.getElementById("uncovered");
   const $btn = document.getElementById("full-coverage");
 
   if (hasTrustedTypes()) {
-    for (const element of getHTMLElements()) {
-      await test(element);
-    }
-
+    await test();
     $btn.disabled = false;
   } else {
     document.getElementById("no-trusted-types").hidden = false;
@@ -91,96 +83,55 @@
     baseObject = Object;
 
     // Reset the results
-    $covered.innerText = "";
-    $caught.innerText = "";
-    $uncovered.innerText = "";
+    $COVERED.innerText = "";
+    $CAUGHT.innerText = "";
+    $UNCOVERED.innerText = "";
 
     // Re-run the tests
-    for (const elementClass of getHTMLElements()) {
-      await test(elementClass);
-    }
+    await test();
   });
 
   // ---
 
-  function test(elementClass) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        _test(elementClass);
-        resolve();
-      }, 1);
-    });
-  }
+  async function test() {
+    for (const elementClass of getHTMLElements()) {
+      const tagName = elementClassToTagName(elementClass);
+      const el = createTestElement(tagName);
+      for (const attr of getElementAttributeProperties(el)) {
+        const cases = [
+          {
+            name: () => `${elementClass}.${attr}=.`,
+            test: () => el[attr] = UNTRUSTED,
+          },
+          {
+            name: () => `${elementClass}.setAttribute('${attr}', .)`,
+            test: () => el.setAttribute(attr, UNTRUSTED),
+          },
+          {
+            name: () => `${elementClass}.setAttributeNS('', '${attr}', .)`,
+            test: () => el.setAttributeNS("", attr, UNTRUSTED),
+          },
+          {
+            name: () => `${elementClass}.setAttributeNS('ns', '${attr}', .)`,
+            test: () => el.setAttributeNS("ns", attr, UNTRUSTED),
+          },
+          {
+            name: () => `${elementClass}.setAttributeNode(document.createAttribute('${attr}').value=.)`,
+            test: () => {
+              const attribute = document.createAttribute(attr);
+              attribute.value = UNTRUSTED;
+              el.setAttributeNode(attribute);
+            },
+          },
+        ];
 
-  function _test(elementClass) {
-    const tagName = elementClassToTagName(elementClass);
-    const el = createTestElement(tagName);
-    const untrusted = {
-      [Symbol.toPrimitive](hint) {
-        switch (hint) {
-        case "number":
-          return 1;
-        case "string":
-          return "foobar";
-        default:
-          throw new Error(`unknown hint: ${hint}`);
-        }
-      },
-    };
-
-    const tests = [
-      {
-        name: (attr) => `${elementClass}.${attr}=.`,
-        test: (el, attr) => el[attr] = untrusted,
-      },
-      {
-        name: (attr) => `${elementClass}.setAttribute('${attr}', .)`,
-        test: (el, attr) => el.setAttribute(attr, untrusted),
-      },
-      {
-        name: (attr) => `${elementClass}.setAttributeNS('', '${attr}', .)`,
-        test: (el, attr) => el.setAttributeNS("", attr, untrusted),
-      },
-      {
-        name: (attr) => `${elementClass}.setAttributeNS('ns', '${attr}', .)`,
-        test: (el, attr) => el.setAttributeNS("ns", attr, untrusted),
-      },
-      {
-        name: (attr) => `${elementClass}.setAttributeNode(document.createAttribute('${attr}').value=.)`,
-        test: (el, attr) => {
-          const attribute = document.createAttribute(attr);
-          attribute.value = untrusted;
-          el.setAttributeNode(attribute);
-        },
-      },
-    ];
-
-    for (const attr of getElementAttributeProperties(el)) {
-      for (const tc of tests) {
-        const name = tc.name(attr);
-
-        const $result = document.createElement("p");
-        $result.innerText = `\`${name}\` - `;
-
-        try {
-          const el = createTestElement(tagName);
-          tc.test(el, attr);
-
-          $result.innerText += "not covered";
-          $result.classList.add("not-covered");
-          $uncovered.appendChild($result);
-        } catch (error) {
-          if (error.message.includes("requires 'Trusted")) {
-            $result.innerText += "covered";
-            $result.classList.add("covered");
-            $covered.appendChild($result);
-          } else {
-            const $message = document.createElement("i");
-            $message.innerText = `${error.message}`;
-            $result.appendChild($message);
-            $result.classList.add("other");
-            $caught.appendChild($result);
-          }
+        for (const tc of cases) {
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              testAndReport(tc.name(), tc.test);
+              resolve();
+            }, 0);
+          });
         }
       }
     }

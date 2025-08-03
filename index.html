@@ -13,11 +13,6 @@
     rel="stylesheet"
     href="./styles.css"
   >
-
-  <script
-    src="./helpers.js"
-  >
-  </script>
 </head>
 
 <body>
@@ -49,7 +44,9 @@
 
   <noscript>
     <p>
-      This page tests <a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted Types</a>, which requires JavaScript to be enabled.
+      This page tests
+      <a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted Types</a>,
+      which requires JavaScript to be enabled.
       Please enable JavaScript to run the Trusted Types tests.
     </p>
   </noscript>
@@ -57,16 +54,18 @@
   <div id="no-trusted-types" hidden>
     This browser does not support Trusted Types. Trusted Types tests cannot be
     run. Please switch to a
-    <a
-      href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API#browser_compatibility"
-    >browser with Trusted Types support</a>.
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API#browser_compatibility">browser with
+      Trusted Types support</a>.
   </div>
 
+  <div id="covered"></div>
+  <div id="caught"></div>
+  <div id="uncovered"></div>
   <div id="shadow" hidden></div>
-  <script>
-  const shadow = document.getElementById("shadow").attachShadow({ mode: "open" });
 
-  function test(name, cb, optionalMessage) {
+  <script src="./helpers.js"></script>
+  <script type="module">
+  function test(name, cb) {
     const providers = {
       // Attributes
       get attr() { return createTestAttribute("attr"); },
@@ -104,34 +103,10 @@
       get textarea() { return createTestElement("textarea"); },
     };
 
-    const $result = document.createElement("p");
-    $result.innerText = `\`${name}\` - `;
-
-    try {
+    testAndReport(name, () => {
       const r = cb(providers);
       if (r instanceof Promise) r.catch(() => null);
-
-      $result.innerText += "not covered";
-      $result.classList.add("not-covered");
-    } catch (error) {
-      if (error.message.includes("requires 'Trusted")) {
-        $result.innerText += "covered";
-        $result.classList.add("covered");
-      } else {
-        const $message = document.createElement("i");
-        $message.innerText = `${error.message}`;
-        $result.appendChild($message);
-        $result.classList.add("other");
-      }
-    } finally {
-      if (optionalMessage) {
-        const $message = document.createElement("i");
-        $message.innerText = `\t(${optionalMessage})`;
-        $result.appendChild($message);
-      }
-
-      document.body.appendChild($result);
-    }
+    });
   }
 
   if (hasTrustedTypes()) {
@@ -142,175 +117,163 @@
     });
 
     const placeholder = "placeholder";
-    const untrusted = {
-      [Symbol.toPrimitive](hint) {
-        switch (hint) {
-          case "number":
-            return 1;
-          case "string":
-            return "foobar";
-          default:
-            throw new Error(`unknown hint: ${hint}`);
-        }
-      },
-    };;
-    const trustedHTML = policy.createHTML("trusted");
+    const trusted = policy.createHTML("trusted");
     const element = document.createElement("name");
 
-    test("attr.value=.", ({ attr }) => attr.value=untrusted);
-    test("attr[onclick].value=.", ({ onclick }) => onclick.value=untrusted, "caught by trusted types when the attribute is added to an element");
-    test("CSSStyleDeclaration.cssText=.", ({ el }) => el.style.cssText=untrusted);
-    test("document.cookie=.", () => document.cookie=untrusted);
-    test("document.createAttribute(.)", () => document.createAttribute(untrusted));
-    test("document.createAttributeNS(., _)", () => document.createAttributeNS(untrusted, placeholder));
-    test("document.createAttributeNS(_, .)", () => document.createAttributeNS(placeholder, untrusted));
-    test("document.createElement(.)", () => document.createElement(untrusted));
-    test("document.createElementNS(., _)", () => document.createElement(untrusted, placeholder));
-    test("document.createElementNS(_, .)", () => document.createElement(placeholder, untrusted));
-    test("document.domain=.", () => document.domain=untrusted);
-    test("document.evaluate(., _, _, _, _)", () => document.evaluate(untrusted, document, null, XPathResult.ANY_TYPE, null));
-    test("document.execCommand(., _, _)", () => document.execCommand(untrusted, false, null));
-    test("document.execCommand(_, _, .)", () => document.execCommand("unlink", false, untrusted));
+    test("attr.value=.", ({ attr }) => attr.value=UNTRUSTED);
+    test("attr[onclick].value=.", ({ onclick }) => onclick.value=UNTRUSTED);
+    test("CSSStyleDeclaration.cssText=.", ({ el }) => el.style.cssText=UNTRUSTED);
+    test("document.cookie=.", () => document.cookie=UNTRUSTED);
+    test("document.createAttribute(.)", () => document.createAttribute(UNTRUSTED));
+    test("document.createAttributeNS(., _)", () => document.createAttributeNS(UNTRUSTED, placeholder));
+    test("document.createAttributeNS(_, .)", () => document.createAttributeNS(placeholder, UNTRUSTED));
+    test("document.createElement(.)", () => document.createElement(UNTRUSTED));
+    test("document.createElementNS(., _)", () => document.createElement(UNTRUSTED, placeholder));
+    test("document.createElementNS(_, .)", () => document.createElement(placeholder, UNTRUSTED));
+    test("document.domain=.", () => document.domain=UNTRUSTED);
+    test("document.evaluate(., _, _, _, _)", () => document.evaluate(UNTRUSTED, document, null, XPathResult.ANY_TYPE, null));
+    test("document.execCommand(., _, _)", () => document.execCommand(UNTRUSTED, false, null));
+    test("document.execCommand(_, _, .)", () => document.execCommand("unlink", false, UNTRUSTED));
     // test("document.location=.", () => document.location=untrusted);
-    test("document.title=.", () => document.title=untrusted);
-    test("document.write(.)", () => document.write(untrusted));
-    test("document.write(_, .)", () => document.write(trustedHTML, untrusted));
-    test("document.writeln(.)", () => document.writeln(untrusted));
-    test("document.writeln(_, .)", () => document.writeln(trustedHTML, untrusted));
-    test("DOMImplementation.createHTMLDocument(.)", () => document.implementation.createHTMLDocument(untrusted));
-    test("DOMParser().parseFromString(., _)", () => (new DOMParser()).parseFromString(untrusted, trustedHTML));
-    test("DOMParser().parseFromString(_, .)", () => (new DOMParser()).parseFromString(trustedHTML, "text/html"));
-    test("Element.after(., ...)", ({ el }) => el.after(untrusted), "strings are inserted as a textNode");
-    test("Element.after(_, ., ...)", ({ el }) => el.after(trustedHTML, untrusted), "strings are inserted as a textNode");
-    test("Element.append(., ...)", ({ el }) => el.append(untrusted));
-    test("Element.append(_, ., ...)", ({ el }) => el.append(trustedHTML, untrusted));
-    test("Element.before(., ...)", ({ el }) => el.before(untrusted), "strings are inserted as a textNode");
-    test("Element.before(_, ., ...)", ({ el }) => el.before(trustedHTML, untrusted), "strings are inserted as a textNode");
-    test("Element.innerHTML=.", ({ el }) => el.innerHTML=untrusted);
+    test("document.title=.", () => document.title=UNTRUSTED);
+    test("document.write(.)", () => document.write(UNTRUSTED));
+    test("document.write(_, .)", () => document.write(trusted, UNTRUSTED));
+    test("document.writeln(.)", () => document.writeln(UNTRUSTED));
+    test("document.writeln(_, .)", () => document.writeln(trusted, UNTRUSTED));
+    test("DOMImplementation.createHTMLDocument(.)", () => document.implementation.createHTMLDocument(UNTRUSTED));
+    test("DOMParser().parseFromString(., _)", () => (new DOMParser()).parseFromString(UNTRUSTED, trusted));
+    test("DOMParser().parseFromString(_, .)", () => (new DOMParser()).parseFromString(trusted, "text/html"));
+    test("Element.after(., ...)", ({ el }) => el.after(UNTRUSTED));
+    test("Element.after(_, ., ...)", ({ el }) => el.after(trusted, UNTRUSTED));
+    test("Element.append(., ...)", ({ el }) => el.append(UNTRUSTED));
+    test("Element.append(_, ., ...)", ({ el }) => el.append(trusted, UNTRUSTED));
+    test("Element.before(., ...)", ({ el }) => el.before(UNTRUSTED));
+    test("Element.before(_, ., ...)", ({ el }) => el.before(trusted, UNTRUSTED));
+    test("Element.innerHTML=.", ({ el }) => el.innerHTML=UNTRUSTED);
     test("Element.insertAdjacentElement(., _)", ({ el }) => el.insertAdjacentElement("afterbegin", element));
-    test("Element.insertAdjacentElement(_, .)", ({ el }) => el.insertAdjacentElement("afterbegin", untrusted));
-    test("Element.insertAdjacentHTML(., _)", ({ el }) => el.insertAdjacentHTML("afterbegin", trustedHTML));
-    test("Element.insertAdjacentHTML(_, .)", ({ el }) => el.insertAdjacentHTML("afterbegin", untrusted));
-    test("Element.insertAdjacentText(., _)", ({ el }) => el.insertAdjacentText("afterbegin", trustedHTML));
-    test("Element.insertAdjacentText(_, .)", ({ el }) => el.insertAdjacentText("afterbegin", untrusted));
-    test("Element.onclick=.", ({ el }) => el.onclick=untrusted, "can only be assigned a function");
-    test("Element.outerHTML=.", ({ el }) => el.outerHTML=untrusted);
-    test("Element.setAttribute(., _)", ({ el }) => el.setAttribute(untrusted, trustedHTML));
-    test("Element.setAttribute(_, .)", ({ el }) => el.setAttribute(trustedHTML, untrusted));
-    test("Element.setAttribute('onclick', .)", ({ el }) => el.setAttribute("onclick", untrusted));
-    test("Element.setAttributeNS(., _, _)", ({ el }) => el.setAttributeNS(untrusted, trustedHTML, trustedHTML));
-    test("Element.setAttributeNS(_, ., _)", ({ el }) => el.setAttributeNS(trustedHTML, untrusted, trustedHTML));
-    test("Element.setAttributeNS(_, _, .)", ({ el }) => el.setAttributeNS(trustedHTML, trustedHTML, untrusted));
-    test("Element.setAttributeNS('', 'onclick', .)", ({ el }) => el.setAttributeNS("", "onclick", untrusted));
-    test("Element.setHTMLUnsafe(., _)", ({ el }) => el.setHTMLUnsafe(untrusted));
-    test("eval(.)", () => eval(untrusted));
-    test("new EventSource(., _)", () => new EventSource(untrusted));
-    test("fetch(., _)", () => fetch(untrusted));
-    test("new Function(.)", () => new Function(untrusted));
-    test("new FileReader().readAsArrayBuffer()", () => (new FileReader()).readAsArrayBuffer(untrusted));
-    test("new FileReader().readAsBinaryString()", () => (new FileReader()).readAsBinaryString(untrusted));
-    test("new FileReader().readAsDataURL()", () => (new FileReader()).readAsDataURL(untrusted));
-    test("new FileReader().readAsText()", () => (new FileReader()).readAsText(untrusted));
-    test("history.pushState(., _, _)", () => history.pushState(untrusted, ""));
-    test("history.pushState(_, ., _)", () => history.pushState(placeholder, untrusted));
+    test("Element.insertAdjacentElement(_, .)", ({ el }) => el.insertAdjacentElement("afterbegin", UNTRUSTED));
+    test("Element.insertAdjacentHTML(., _)", ({ el }) => el.insertAdjacentHTML("afterbegin", trusted));
+    test("Element.insertAdjacentHTML(_, .)", ({ el }) => el.insertAdjacentHTML("afterbegin", UNTRUSTED));
+    test("Element.insertAdjacentText(., _)", ({ el }) => el.insertAdjacentText("afterbegin", trusted));
+    test("Element.insertAdjacentText(_, .)", ({ el }) => el.insertAdjacentText("afterbegin", UNTRUSTED));
+    test("Element.onclick=.", ({ el }) => el.onclick=UNTRUSTED);
+    test("Element.outerHTML=.", ({ el }) => el.outerHTML=UNTRUSTED);
+    test("Element.setAttribute(., _)", ({ el }) => el.setAttribute(UNTRUSTED, trusted));
+    test("Element.setAttribute(_, .)", ({ el }) => el.setAttribute(trusted, UNTRUSTED));
+    test("Element.setAttribute('onclick', .)", ({ el }) => el.setAttribute("onclick", UNTRUSTED));
+    test("Element.setAttributeNS(., _, _)", ({ el }) => el.setAttributeNS(UNTRUSTED, trusted, trusted));
+    test("Element.setAttributeNS(_, ., _)", ({ el }) => el.setAttributeNS(trusted, UNTRUSTED, trusted));
+    test("Element.setAttributeNS(_, _, .)", ({ el }) => el.setAttributeNS(trusted, trusted, UNTRUSTED));
+    test("Element.setAttributeNS('', 'onclick', .)", ({ el }) => el.setAttributeNS("", "onclick", UNTRUSTED));
+    test("Element.setHTMLUnsafe(., _)", ({ el }) => el.setHTMLUnsafe(UNTRUSTED));
+    test("eval(.)", () => eval(UNTRUSTED));
+    test("new EventSource(., _)", () => new EventSource(UNTRUSTED));
+    test("fetch(., _)", () => fetch(UNTRUSTED));
+    test("new Function(.)", () => new Function(UNTRUSTED));
+    test("new FileReader().readAsArrayBuffer()", () => (new FileReader()).readAsArrayBuffer(UNTRUSTED));
+    test("new FileReader().readAsBinaryString()", () => (new FileReader()).readAsBinaryString(UNTRUSTED));
+    test("new FileReader().readAsDataURL()", () => (new FileReader()).readAsDataURL(UNTRUSTED));
+    test("new FileReader().readAsText()", () => (new FileReader()).readAsText(UNTRUSTED));
+    test("history.pushState(., _, _)", () => history.pushState(UNTRUSTED, ""));
+    test("history.pushState(_, ., _)", () => history.pushState(placeholder, UNTRUSTED));
     // test("history.pushState(_, _, .)", () => history.pushState(placeholder, untrusted, `${location}/untrusted`));
-    test("history.replaceState(., _, _)", () => history.replaceState(untrusted, ""));
-    test("history.replaceState(_, ., _)", () => history.replaceState(placeholder, untrusted));
+    test("history.replaceState(., _, _)", () => history.replaceState(UNTRUSTED, ""));
+    test("history.replaceState(_, ., _)", () => history.replaceState(placeholder, UNTRUSTED));
     // test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, untrusted, `${location}/untrusted`));
-    test("HTMLElement.innerText=.", ({ el }) => el.innerText=untrusted);
-    test("HTMLElement.outerText=.", ({ el }) => el.outerText=untrusted);
-    test("HTMLElement.style=.", ({ el }) => el.style=untrusted);
-    test("HTMLElement.style.cssText=.", ({ el }) => el.style.cssText=untrusted);
-    test("HTMLAnchorElement.href=.", ({ a }) => a.href=untrusted);
-    test("HTMLAnchorElement.target=.", ({ a }) => a.target=untrusted);
-    test("HTMLAreaElement.target=.", ({ area }) => area.target=untrusted);
-    test("HTMLBaseElement.target=.", ({ base }) => base.target=untrusted);
-    test("HTMLButtonElement.name=.", ({ button }) => button.name =untrusted);
-    test("HTMLButtonElement.type=.", ({ button }) => button.type=untrusted);
-    test("HTMLButtonElement.value=.", ({ button }) => button.value=untrusted);
-    test("HTMLDataElement.value=.", ({ data }) => data.value=untrusted);
-    test("HTMLEmbedElement.src=.", ({ embed }) => embed.src=untrusted);
-    test("HTMLEmbedElement.type=.", ({ embed }) => embed.type=untrusted);
-    test("HTMLFormElement.action=.", ({ form }) => form.action=untrusted);
-    test("HTMLFormElement.method=.", ({ form }) => form.method=untrusted);
-    test("HTMLFormElement.name=.", ({ form }) => form.name=untrusted);
-    test("HTMLFormElement.target=.", ({ form }) => form.target=untrusted);
-    test("HTMLFieldsetElement.name=.", ({ fieldset }) => fieldset.name=untrusted);
-    test("HTMLIFrameElement.name=.", ({ iframe }) => iframe.name=untrusted);
-    test("HTMLIFrameElement.src=.", ({ iframe }) => iframe.src=untrusted);
-    test("HTMLIFrameElement.srcdoc=.", ({ iframe }) => iframe.srcdoc=untrusted);
-    test("HTMLImageElement.src=.", ({ img }) => img.src=untrusted);
-    test("HTMLImageElement.srcset=.", ({ img }) => img.srcset=untrusted);
-    test("HTMLInputElement.name=.", ({ input }) => input.name=untrusted);
-    test("HTMLInputElement.type=.", ({ input }) => input.type=untrusted);
-    test("HTMLInputElement.value=.", ({ input }) => input.value=untrusted);
-    test("HTMLLinkElement.type=.", ({ link }) => link.type=untrusted);
-    test("HTMLListItemElement.value=.", ({ li }) => li.value=untrusted);
-    test("HTMLMapElement.name=.", ({ map }) => map.name=untrusted);
-    test("HTMLMenuElement.type=.", ({ menu }) => menu.type=untrusted);
-    test("HTMLMetaElement.name=.", ({ meta }) => meta.name=untrusted);
+    test("HTMLElement.innerText=.", ({ el }) => el.innerText=UNTRUSTED);
+    test("HTMLElement.outerText=.", ({ el }) => el.outerText=UNTRUSTED);
+    test("HTMLElement.style=.", ({ el }) => el.style=UNTRUSTED);
+    test("HTMLElement.style.cssText=.", ({ el }) => el.style.cssText=UNTRUSTED);
+    test("HTMLAnchorElement.href=.", ({ a }) => a.href=UNTRUSTED);
+    test("HTMLAnchorElement.target=.", ({ a }) => a.target=UNTRUSTED);
+    test("HTMLAreaElement.target=.", ({ area }) => area.target=UNTRUSTED);
+    test("HTMLBaseElement.target=.", ({ base }) => base.target=UNTRUSTED);
+    test("HTMLButtonElement.name=.", ({ button }) => button.name =UNTRUSTED);
+    test("HTMLButtonElement.type=.", ({ button }) => button.type=UNTRUSTED);
+    test("HTMLButtonElement.value=.", ({ button }) => button.value=UNTRUSTED);
+    test("HTMLDataElement.value=.", ({ data }) => data.value=UNTRUSTED);
+    test("HTMLEmbedElement.src=.", ({ embed }) => embed.src=UNTRUSTED);
+    test("HTMLEmbedElement.type=.", ({ embed }) => embed.type=UNTRUSTED);
+    test("HTMLFormElement.action=.", ({ form }) => form.action=UNTRUSTED);
+    test("HTMLFormElement.method=.", ({ form }) => form.method=UNTRUSTED);
+    test("HTMLFormElement.name=.", ({ form }) => form.name=UNTRUSTED);
+    test("HTMLFormElement.target=.", ({ form }) => form.target=UNTRUSTED);
+    test("HTMLFieldsetElement.name=.", ({ fieldset }) => fieldset.name=UNTRUSTED);
+    test("HTMLIFrameElement.name=.", ({ iframe }) => iframe.name=UNTRUSTED);
+    test("HTMLIFrameElement.src=.", ({ iframe }) => iframe.src=UNTRUSTED);
+    test("HTMLIFrameElement.srcdoc=.", ({ iframe }) => iframe.srcdoc=UNTRUSTED);
+    test("HTMLImageElement.src=.", ({ img }) => img.src=UNTRUSTED);
+    test("HTMLImageElement.srcset=.", ({ img }) => img.srcset=UNTRUSTED);
+    test("HTMLInputElement.name=.", ({ input }) => input.name=UNTRUSTED);
+    test("HTMLInputElement.type=.", ({ input }) => input.type=UNTRUSTED);
+    test("HTMLInputElement.value=.", ({ input }) => input.value=UNTRUSTED);
+    test("HTMLLinkElement.type=.", ({ link }) => link.type=UNTRUSTED);
+    test("HTMLListItemElement.value=.", ({ li }) => li.value=UNTRUSTED);
+    test("HTMLMapElement.name=.", ({ map }) => map.name=UNTRUSTED);
+    test("HTMLMenuElement.type=.", ({ menu }) => menu.type=UNTRUSTED);
+    test("HTMLMetaElement.name=.", ({ meta }) => meta.name=UNTRUSTED);
     test("HTMLMeterElement.value=.", ({ meter }) => meter.value=3.14);
-    test("HTMLObjectElement.codebase=.", ({ object }) => object.codebase=untrusted);
-    test("HTMLObjectElement.data=.", ({ object }) => object.data=untrusted);
-    test("HTMLObjectElement.name=.", ({ object }) => object.name=untrusted);
-    test("HTMLObjectElement.type=.", ({ object }) => object.type=untrusted);
-    test("HTMLOListElement.type=.", ({ ol }) => ol.type=untrusted);
-    test("HTMLOptionElement.value=.", ({ option }) => option.value=untrusted);
-    test("HTMLOutputElement.name=.", ({ output }) => output.name=untrusted);
-    test("HTMLParamElement.value=.", ({ param }) => param.value=untrusted);
-    test("HTMLParamElement.name=.", ({ param }) => param.name=untrusted);
+    test("HTMLObjectElement.codebase=.", ({ object }) => object.codebase=UNTRUSTED);
+    test("HTMLObjectElement.data=.", ({ object }) => object.data=UNTRUSTED);
+    test("HTMLObjectElement.name=.", ({ object }) => object.name=UNTRUSTED);
+    test("HTMLObjectElement.type=.", ({ object }) => object.type=UNTRUSTED);
+    test("HTMLOListElement.type=.", ({ ol }) => ol.type=UNTRUSTED);
+    test("HTMLOptionElement.value=.", ({ option }) => option.value=UNTRUSTED);
+    test("HTMLOutputElement.name=.", ({ output }) => output.name=UNTRUSTED);
+    test("HTMLParamElement.value=.", ({ param }) => param.value=UNTRUSTED);
+    test("HTMLParamElement.name=.", ({ param }) => param.name=UNTRUSTED);
     test("HTMLProgressElement.value=.", ({ progress }) => progress.value=3.14);
-    test("HTMLScriptElement.innerHTML=.", ({ script }) => script.innerHTML=untrusted);
-    test("HTMLScriptElement.innerText=.", ({ script }) => script.innerText=untrusted);
-    test("HTMLScriptElement.src=.", ({ script }) => script.src=untrusted);
-    test("HTMLScriptElement.text=.", ({ script }) => script.text=untrusted);
-    test("HTMLScriptElement.type=.", ({ script }) => script.type=untrusted);
-    test("HTMLScriptElement.textContent=.", ({ script }) => script.textContent=untrusted);
-    test("HTMLSelectElement.name=.", ({ select }) => select.name=untrusted);
-    test("HTMLSourceElement.type=.", ({ source }) => source.type=untrusted);
-    test("HTMLStyleElement.type=.", ({ style }) => style.type=untrusted);
-    test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name=untrusted);
-    test("JSON.parse(., _)", () => JSON.parse(`["${untrusted}"]`));
-    test("localStorage.setItem(., _)", () => localStorage.setItem(untrusted, placeholder));
-    test("localStorage.setItem(_, .)", () => localStorage.setItem(placeholder, untrusted));
+    test("HTMLScriptElement.innerHTML=.", ({ script }) => script.innerHTML=UNTRUSTED);
+    test("HTMLScriptElement.innerText=.", ({ script }) => script.innerText=UNTRUSTED);
+    test("HTMLScriptElement.src=.", ({ script }) => script.src=UNTRUSTED);
+    test("HTMLScriptElement.text=.", ({ script }) => script.text=UNTRUSTED);
+    test("HTMLScriptElement.type=.", ({ script }) => script.type=UNTRUSTED);
+    test("HTMLScriptElement.textContent=.", ({ script }) => script.textContent=UNTRUSTED);
+    test("HTMLSelectElement.name=.", ({ select }) => select.name=UNTRUSTED);
+    test("HTMLSourceElement.type=.", ({ source }) => source.type=UNTRUSTED);
+    test("HTMLStyleElement.type=.", ({ style }) => style.type=UNTRUSTED);
+    test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name=UNTRUSTED);
+    test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
+    test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
+    test("localStorage.setItem(_, .)", () => localStorage.setItem(placeholder, UNTRUSTED));
     // test("Location.assign(.)", () => location.assign(untrusted));
-    test("Location.hash=.", () => location.hash=untrusted);
+    test("Location.hash=.", () => location.hash=UNTRUSTED);
     // test("Location.host=.", () => location.host=untrusted);
     // test("Location.hostname=.", () => location.hostname=untrusted);
     // test("Location.href=.", () => location.href=untrusted);
     // test("Location.href=.", () => location.href=`javascript:${untrusted}`);
     // test("Location.pathname=.", () => location.pathname=untrusted);
-    test("Location.port=.", () => location.port=untrusted);
-    test("Location.protocol=.", () => location.protocol=untrusted);
+    test("Location.port=.", () => location.port=UNTRUSTED);
+    test("Location.protocol=.", () => location.protocol=UNTRUSTED);
     // test("Location.replace(.)", () => location.replace(untrusted));
     // test("Location.replace(.)", () => location.replace(`javascript:${untrusted}`));
-    test("Location.search=.", () => location.search=untrusted);
+    test("Location.search=.", () => location.search=UNTRUSTED);
     // test("msSetImmediate(., ...)", () => msSetImmediate(untrusted));
-    test("Node.appendChild(.)", ({ el }) => el.appendChild(untrusted));
-    test("Node.replaceChild(., _)", ({ el }) => el.appendChild(untrusted, trustedHTML));
-    test("Node.textContent=.", ({ el }) => el.textContent=untrusted);
-    test("Range.createContextualFragment(.)", () => document.createRange().createContextualFragment(untrusted));
-    test("new RegExp(., _)", () => new RegExp(untrusted));
+    test("Node.appendChild(.)", ({ el }) => el.appendChild(UNTRUSTED));
+    test("Node.replaceChild(., _)", ({ el }) => el.appendChild(UNTRUSTED, trusted));
+    test("Node.textContent=.", ({ el }) => el.textContent=UNTRUSTED);
+    test("Range.createContextualFragment(.)", () => document.createRange().createContextualFragment(UNTRUSTED));
+    test("new RegExp(., _)", () => new RegExp(UNTRUSTED));
     test("new RegExp(_, .)", () => new RegExp(/trusted/, "g"));
-    test("requestFileSystem(., _, _, _)", () => webkitRequestFileSystem(untrusted, 1, () => {}));
-    test("sessionStorage.setItem(., _)", () => sessionStorage.setItem(untrusted, placeholder));
-    test("sessionStorage.setItem(_, .)", () => sessionStorage.setItem(placeholder, untrusted));
+    test("requestFileSystem(., _, _, _)", () => webkitRequestFileSystem(UNTRUSTED, 1, () => {}));
+    test("sessionStorage.setItem(., _)", () => sessionStorage.setItem(UNTRUSTED, placeholder));
+    test("sessionStorage.setItem(_, .)", () => sessionStorage.setItem(placeholder, UNTRUSTED));
     // test("setImmediate(., ...)", () => setImmediate(untrusted));
-    test("setInterval(., ...)", () => setInterval(untrusted));
-    test("setTimeout(., ...)", () => setTimeout(untrusted));
-    test("new WebSocket(., _)", () => new WebSocket(`ws://${untrusted}`));
-    test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(untrusted); resolve() } catch(error) { reject(error) } } }));
+    test("setInterval(., ...)", () => setInterval(UNTRUSTED));
+    test("setTimeout(., ...)", () => setTimeout(UNTRUSTED));
+    test("new WebSocket(., _)", () => new WebSocket(`ws://${UNTRUSTED}`));
+    test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(UNTRUSTED); resolve() } catch(error) { reject(error) } } }));
     // test("window.location=.", () => window.location=untrusted);
-    test("window.open(.)", () => window.open(untrusted));
-    test("window.postMessage(., _, _)", () => window.postMessage(untrusted));
+    test("window.open(.)", () => window.open(UNTRUSTED));
+    test("window.postMessage(., _, _)", () => window.postMessage(UNTRUSTED));
     test("window.postMessage(_, ., _)", () => window.postMessage(placeholder, "https://example.com/"));
-    test("new XMLHttpRequest().open(., _, _, _, _)", () => (new XMLHttpRequest()).open(untrusted, placeholder));
-    test("new XMLHttpRequest().open(_, ., _, _, _)", () => (new XMLHttpRequest()).open(placeholder, untrusted));
-    test("new XMLHttpRequest().send(.)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.send(untrusted); });
-    test("new XMLHttpRequest().setRequestHeader(., _)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.setRequestHeader(untrusted, placeholder); });
-    test("new XMLHttpRequest().setRequestHeader(_, .)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.setRequestHeader(placeholder, untrusted); });
-    test("Navigator.sendBeacon(., _)", () => navigator.sendBeacon(`http://${untrusted}`));
-    test("Navigator.sendBeacon(_, )", () => navigator.sendBeacon("https://example.com/", untrusted));
+    test("new XMLHttpRequest().open(., _, _, _, _)", () => (new XMLHttpRequest()).open(UNTRUSTED, placeholder));
+    test("new XMLHttpRequest().open(_, ., _, _, _)", () => (new XMLHttpRequest()).open(placeholder, UNTRUSTED));
+    test("new XMLHttpRequest().send(.)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.send(UNTRUSTED); });
+    test("new XMLHttpRequest().setRequestHeader(., _)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.setRequestHeader(UNTRUSTED, placeholder); });
+    test("new XMLHttpRequest().setRequestHeader(_, .)", () => { const req = new XMLHttpRequest(); req.open("GET", "/"); req.setRequestHeader(placeholder, UNTRUSTED); });
+    test("Navigator.sendBeacon(., _)", () => navigator.sendBeacon(`http://${UNTRUSTED}`));
+    test("Navigator.sendBeacon(_, )", () => navigator.sendBeacon("https://example.com/", UNTRUSTED));
   } else {
     document.getElementById("no-trusted-types").hidden = false;
   }
