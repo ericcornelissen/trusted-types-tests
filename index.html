@@ -142,7 +142,18 @@
     });
 
     const placeholder = "placeholder";
-    const untrusted = "untrusted";
+    const untrusted = {
+      [Symbol.toPrimitive](hint) {
+        switch (hint) {
+          case "number":
+            return 1;
+          case "string":
+            return "foobar";
+          default:
+            throw new Error(`unknown hint: ${hint}`);
+        }
+      },
+    };;
     const trustedHTML = policy.createHTML("trusted");
     const element = document.createElement("name");
 
