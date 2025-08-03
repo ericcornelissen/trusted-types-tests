@@ -134,7 +134,15 @@
         name: (attr) => `${elementClass}.setAttributeNS('ns', '${attr}', .)`,
         test: (el, attr) => el.setAttributeNS("ns", attr, untrusted),
       },
-    ]
+      {
+        name: (attr) => `${elementClass}.setAttributeNode(document.createAttribute('${attr}').value=.)`,
+        test: (el, attr) => {
+          const attribute = document.createAttribute(attr);
+          attribute.value = untrusted;
+          el.setAttributeNode(attribute);
+        },
+      },
+    ];
 
     for (const attr of getElementAttributeProperties(el)) {
       for (const tc of tests) {
