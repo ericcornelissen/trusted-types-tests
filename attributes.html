@@ -115,30 +115,53 @@
   function _test(elementClass) {
     const tagName = elementClassToTagName(elementClass);
     const el = createTestElement(tagName);
+    const untrusted = "untrusted";
+
+    const tests = [
+      {
+        name: (attr) => `${elementClass}.${attr}=.`,
+        test: (el, attr) => el[attr] = untrusted,
+      },
+      {
+        name: (attr) => `${elementClass}.setAttribute('${attr}', .)`,
+        test: (el, attr) => el.setAttribute(attr, untrusted),
+      },
+      {
+        name: (attr) => `${elementClass}.setAttributeNS('', '${attr}', .)`,
+        test: (el, attr) => el.setAttributeNS("", attr, untrusted),
+      },
+      {
+        name: (attr) => `${elementClass}.setAttributeNS('ns', '${attr}', .)`,
+        test: (el, attr) => el.setAttributeNS("ns", attr, untrusted),
+      },
+    ]
+
     for (const attr of getElementAttributeProperties(el)) {
-      const name = `${elementClass}.${attr}=.`;
+      for (const tc of tests) {
+        const name = tc.name(attr);
 
-      const $result = document.createElement("p");
-      $result.innerText = `\`${name}\` - `;
+        const $result = document.createElement("p");
+        $result.innerText = `\`${name}\` - `;
 
-      try {
-        const el = createTestElement(tagName);
-        el[attr] = "untrusted";
+        try {
+          const el = createTestElement(tagName);
+          tc.test(el, attr);
 
-        $result.innerText += "not covered";
-        $result.classList.add("not-covered");
-        $uncovered.appendChild($result);
-      } catch (error) {
-        if (error.message.includes("requires 'Trusted")) {
-          $result.innerText += "covered";
-          $result.classList.add("covered");
-          $covered.appendChild($result);
-        } else {
-          const $message = document.createElement("i");
-          $message.innerText = `${error.message}`;
-          $result.appendChild($message);
-          $result.classList.add("other");
-          $caught.appendChild($result);
+          $result.innerText += "not covered";
+          $result.classList.add("not-covered");
+          $uncovered.appendChild($result);
+        } catch (error) {
+          if (error.message.includes("requires 'Trusted")) {
+            $result.innerText += "covered";
+            $result.classList.add("covered");
+            $covered.appendChild($result);
+          } else {
+            const $message = document.createElement("i");
+            $message.innerText = `${error.message}`;
+            $result.appendChild($message);
+            $result.classList.add("other");
+            $caught.appendChild($result);
+          }
         }
       }
     }

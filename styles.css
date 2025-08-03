@@ -2,6 +2,7 @@
 .covered { background-color:#d9ead3 }
 .not-covered { background-color:#f4cccc }
 .other { background-color:#fce5cd }
+.covered, .not-covered, .other { font-family: monospace }
 
 @media (prefers-color-scheme: dark) {
   :root { background-color:#111; color:#fff; }
