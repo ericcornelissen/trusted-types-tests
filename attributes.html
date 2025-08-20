@@ -116,7 +116,14 @@
             test: () => el.setAttributeNS("ns", attr, UNTRUSTED),
           },
           {
-            name: () => `${elementClass}.setAttributeNode(document.createAttribute('${attr}').value=.)`,
+            name: () => `document.createAttribute('${attr}').value=.`,
+            test: () => {
+              const attribute = document.createAttribute(attr);
+              attribute.value = UNTRUSTED;
+            },
+          },
+          {
+            name: () => `${elementClass}.setAttributeNode(.)`,
             test: () => {
               const attribute = document.createAttribute(attr);
               attribute.value = UNTRUSTED;
