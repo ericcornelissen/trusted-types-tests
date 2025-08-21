@@ -123,7 +123,21 @@
             },
           },
           {
-            name: () => `${elementClass}.setAttributeNode(.)`,
+            name: () => `document.createAttributeNS('', '${attr}').value=.`,
+            test: () => {
+              const attribute = document.createAttributeNS("", attr);
+              attribute.value = UNTRUSTED;
+            },
+          },
+          {
+            name: () => `document.createAttributeNS('ns', '${attr}').value=.`,
+            test: () => {
+              const attribute = document.createAttributeNS("ns", attr);
+              attribute.value = UNTRUSTED;
+            },
+          },
+          {
+            name: () => `${elementClass}.setAttributeNode([${attr}])`,
             test: () => {
               const attribute = document.createAttribute(attr);
               attribute.value = UNTRUSTED;
