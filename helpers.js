@@ -5,18 +5,7 @@ const $CAUGHT = document.getElementById("caught");
 const $UNCOVERED = document.getElementById("uncovered");
 const $SHADOW = document.getElementById("shadow").attachShadow({ mode: "open" });
 
-const UNTRUSTED = {
-  [Symbol.toPrimitive](hint) {
-    switch (hint) {
-      case "number":
-        return 1;
-      case "string":
-        return "foobar";
-      default:
-        throw new Error(`unknown hint: ${hint}`);
-    }
-  },
-};
+const UNTRUSTED = "foobar";
 
 function createTestAttribute(attributeName) {
   const attr = document.createAttribute(attributeName);

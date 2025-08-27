@@ -234,6 +234,7 @@
     test("HTMLStyleElement.type=.", ({ style }) => style.type=UNTRUSTED);
     test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name=UNTRUSTED);
     test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
+    test("import(.)", () => import(UNTRUSTED));
     test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
     test("localStorage.setItem(_, .)", () => localStorage.setItem(placeholder, UNTRUSTED));
     // test("Location.assign(.)", () => location.assign(untrusted));
