@@ -12,7 +12,7 @@ covers in order to understand how using it can and cannot help prevent attacks.
 To view the test results for your browser
 
 - visit <https://ericcornelissen.github.io/trusted-types-tests/>, or
-- clone the repository and open `index.html` in your browser.
+- clone the repository,  run `python3 -m http.server`, visit it in your browser.
 
 This requires a browser with [Trusted Types Compatibility].
 

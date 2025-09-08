@@ -147,12 +147,7 @@
         ];
 
         for (const tc of cases) {
-          await new Promise((resolve) => {
-            setTimeout(() => {
-              testAndReport(tc.name(), tc.test);
-              resolve();
-            }, 0);
-          });
+          await testAndReport(tc.name(), tc.test);
         }
       }
     }

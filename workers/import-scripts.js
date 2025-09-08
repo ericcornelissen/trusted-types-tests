@@ -1,0 +1,1 @@
+importScripts("./_helper.js");
