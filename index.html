@@ -125,7 +125,6 @@
       new AsyncFunction(UNTRUSTED);
     });
     await test("new AsyncGeneratorFunction(.)", () => {
-      const GeneratorFunction = (function* () { }).constructor;
       const AsyncGeneratorFunction = (async function* () { }).constructor;
       new AsyncGeneratorFunction(UNTRUSTED);
     });
@@ -250,6 +249,11 @@
     });
     await test("HTMLInputElement.type=.", ({ input }) => input.type=UNTRUSTED);
     await test("HTMLInputElement.value=.", ({ input }) => input.value=UNTRUSTED);
+    await test("HTMLLinkElement.href=.", ({ link }) => {
+      link.as = "script";
+      link.rel = "preload";
+      link.href = UNTRUSTED;
+    });
     await test("HTMLLinkElement.type=.", ({ link }) => link.type=UNTRUSTED);
     await test("HTMLListItemElement.value=.", ({ li }) => li.value=UNTRUSTED);
     await test("HTMLMapElement.name=.", ({ map }) => map.name=UNTRUSTED);
@@ -308,7 +312,6 @@
     await test("requestFileSystem(., _, _, _)", () => webkitRequestFileSystem(UNTRUSTED, 1, () => {}));
     await test("sessionStorage.setItem(., _)", () => sessionStorage.setItem(UNTRUSTED, placeholder));
     await test("sessionStorage.setItem(_, .)", () => sessionStorage.setItem(placeholder, UNTRUSTED));
-    // await test("setImmediate(., ...)", () => setImmediate(untrusted));
     await test("setInterval(., ...)", () => setInterval(UNTRUSTED));
     await test("setTimeout(., ...)", () => setTimeout(UNTRUSTED));
     await test("new SharedWorker(.)", () => new SharedWorker(UNTRUSTED_URL));
