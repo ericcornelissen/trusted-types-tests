@@ -283,7 +283,7 @@
     await test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
     await test("import(.)", () => import(UNTRUSTED));
     await test("importScripts(.)", () => {
-      const script = policy.createScriptURL("./workers/import-scripts.js");
+      const script = policy.createScriptURL("./worker-script-importScripts.js");
       new Worker(script);
     });
     await test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
