@@ -20,10 +20,6 @@ function createTestElement(tagName) {
   return $el;
 }
 
-function hasTrustedTypes() {
-  return typeof trustedTypes !== "undefined";
-}
-
 async function testAndReport(name, cb) {
   const { promise, resolve } = Promise.withResolvers();
 
