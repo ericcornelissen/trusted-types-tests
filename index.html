@@ -15,6 +15,7 @@
   >
 
   <script src="./trusted-types.js"></script>
+  <script src="./service-worker-loader.js"></script>
 </head>
 
 <body>
@@ -136,7 +137,7 @@
     await test("document.evaluate(., _, _, _, _)", () => document.evaluate(UNTRUSTED, document, null, XPathResult.ANY_TYPE, null));
     await test("document.execCommand(., _, _)", () => document.execCommand(UNTRUSTED, false, null));
     await test("document.execCommand(_, _, .)", () => document.execCommand("unlink", false, UNTRUSTED));
-    // await test("document.location=.", () => document.location=UNTRUSTED);
+    if (hasServiceWorker()) await test("document.location=.", () => document.location=UNTRUSTED);
     await test("document.location=javascript:.", () => document.location=UNTRUSTED_JS_URL);
     await test("document.title=.", () => document.title=UNTRUSTED);
     await test("document.write(.)", () => document.write(UNTRUSTED));
@@ -183,18 +184,18 @@
     await test("new FileReader().readAsText()", () => (new FileReader()).readAsText(UNTRUSTED));
     await test("history.pushState(., _, _)", () => history.pushState(UNTRUSTED, ""));
     await test("history.pushState(_, ., _)", () => history.pushState(placeholder, UNTRUSTED));
-    // await test("history.pushState(_, _, .)", () => history.pushState(placeholder, untrusted, `${location}/untrusted`));
+    // await test("history.pushState(_, _, .)", () => history.pushState(placeholder, UNTRUSTED, `${location}/untrusted`));
     await test("history.replaceState(., _, _)", () => history.replaceState(UNTRUSTED, ""));
     await test("history.replaceState(_, ., _)", () => history.replaceState(placeholder, UNTRUSTED));
-    // await test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, untrusted, `${location}/untrusted`));
+    // await test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, UNTRUSTED, `${location}/untrusted`));
     await test("HTMLElement.innerText=.", ({ el }) => el.innerText=UNTRUSTED);
     await test("HTMLElement.outerText=.", ({ el }) => el.outerText=UNTRUSTED);
     await test("HTMLElement.style=.", ({ el }) => el.style=UNTRUSTED);
     await test("HTMLElement.style.cssText=.", ({ el }) => el.style.cssText=UNTRUSTED);
-    // await test("HTMLAnchorElement.href=.", ({ a }) => {
-    //   a.href = UNTRUSTED_URL;
-    //   a.click();
-    // });
+    if (hasServiceWorker()) await test("HTMLAnchorElement.href=.", ({ a }) => {
+      a.href = UNTRUSTED_URL;
+      a.click();
+    });
     await test("HTMLAnchorElement.href=javascript:.", ({ a }) => {
       a.href = UNTRUSTED_JS_URL;
       a.click();
@@ -203,11 +204,11 @@
     await test("HTMLAreaElement.target=.", ({ area }) => area.target=UNTRUSTED);
     await test("HTMLBaseElement.target=.", ({ base }) => base.target=UNTRUSTED);
     await test("HTMLButtonElement.name=.", ({ button }) => button.name=UNTRUSTED);
-    // await test("HTMLButtonElement.formAction=.", ({ form, button }) => {
-    //   button.formAction = UNTRUSTED_URL;
-    //   form.appendChild(button);
-    //   button.click();
-    // });
+    if (hasServiceWorker()) await test("HTMLButtonElement.formAction=.", ({ form, button }) => {
+      button.formAction = UNTRUSTED_URL;
+      form.appendChild(button);
+      button.click();
+    });
     await test("HTMLButtonElement.formAction=javascript:.", ({ form, button }) => {
       button.formAction = UNTRUSTED_JS_URL;
       form.appendChild(button);
@@ -229,12 +230,12 @@
     await test("HTMLImageElement.src=.", ({ img }) => img.src=UNTRUSTED);
     await test("HTMLImageElement.srcset=.", ({ img }) => img.srcset=UNTRUSTED);
     await test("HTMLInputElement.name=.", ({ input }) => input.name=UNTRUSTED);
-    // await test("HTMLInputElement.formAction=.", ({ form, input }) => {
-    //   input.formAction = UNTRUSTED_URL;
-    //   input.type = "submit";
-    //   form.appendChild(input);
-    //   input.click();
-    // });
+    if (hasServiceWorker()) await test("HTMLInputElement.formAction=.", ({ form, input }) => {
+      input.formAction = UNTRUSTED_URL;
+      input.type = "submit";
+      form.appendChild(input);
+      input.click();
+    });
     await test("HTMLInputElement.formAction=javascript:.", ({ form, input }) => {
       input.formAction = UNTRUSTED_JS_URL;
       input.type = "submit";
@@ -282,17 +283,17 @@
     });
     await test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
     await test("localStorage.setItem(_, .)", () => localStorage.setItem(placeholder, UNTRUSTED));
-    // await test("Location.assign(.)", () => location.assign(UNTRUSTED_URL));
+    if (hasServiceWorker()) await test("Location.assign(.)", () => location.assign(UNTRUSTED_URL));
     await test("Location.assign(javascript:.)", () => location.assign(UNTRUSTED_JS_URL));
     await test("Location.hash=.", () => location.hash=UNTRUSTED);
-    // await test("Location.host=.", () => location.host=UNTRUSTED);
-    // await test("Location.hostname=.", () => location.hostname=UNTRUSTED);
-    // await test("Location.href=.", () => location.href=UNTRUSTED_URL);
+    if (hasServiceWorker()) await test("Location.host=.", () => location.host=UNTRUSTED);
+    if (hasServiceWorker()) await test("Location.hostname=.", () => location.hostname=UNTRUSTED);
+    if (hasServiceWorker()) await test("Location.href=.", () => location.href=UNTRUSTED_URL);
     await test("Location.href=javascript:.", () => location.href=UNTRUSTED_JS_URL);
-    // await test("Location.pathname=.", () => location.pathname=UNTRUSTED);
+    if (hasServiceWorker()) await test("Location.pathname=.", () => location.pathname=UNTRUSTED);
     await test("Location.port=.", () => location.port=UNTRUSTED);
     await test("Location.protocol=.", () => location.protocol=UNTRUSTED);
-    // await test("Location.replace(.)", () => location.replace(UNTRUSTED_URL));
+    if (hasServiceWorker()) await test("Location.replace(.)", () => location.replace(UNTRUSTED_URL));
     await test("Location.replace(javascript:.)", () => location.replace(UNTRUSTED_JS_URL));
     await test("Location.search=.", () => location.search=UNTRUSTED);
     await test("Navigator.sendBeacon(., _)", () => navigator.sendBeacon(`http://${UNTRUSTED}`));
@@ -311,7 +312,7 @@
     await test("new SharedWorker(.)", () => new SharedWorker(UNTRUSTED_URL));
     await test("new WebSocket(., _)", () => new WebSocket(`ws://${UNTRUSTED}`));
     await test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(UNTRUSTED); resolve() } catch(error) { reject(error) } } }));
-    // await test("window.location=.", () => window.location=untrusted);
+    if (hasServiceWorker()) await test("window.location=.", () => window.location=UNTRUSTED);
     await test("window.open(.)", () => window.open(UNTRUSTED));
     await test("window.postMessage(., _, _)", () => window.postMessage(UNTRUSTED));
     await test("window.postMessage(_, ., _)", () => window.postMessage(placeholder, "https://example.com/"));
