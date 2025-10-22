@@ -313,6 +313,7 @@
     await test("new WebSocket(., _)", () => new WebSocket(`ws://${UNTRUSTED}`));
     await test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(UNTRUSTED); resolve() } catch(error) { reject(error) } } }));
     if (hasServiceWorker()) await test("window.location=.", () => window.location=UNTRUSTED);
+    await test("window.location=javascript:.", () => window.location=UNTRUSTED_JS_URL);
     await test("window.open(.)", () => window.open(UNTRUSTED));
     await test("window.postMessage(., _, _)", () => window.postMessage(UNTRUSTED));
     await test("window.postMessage(_, ., _)", () => window.postMessage(placeholder, "https://example.com/"));
