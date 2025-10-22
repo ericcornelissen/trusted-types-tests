@@ -185,9 +185,11 @@
     await test("history.pushState(., _, _)", () => history.pushState(UNTRUSTED, ""));
     await test("history.pushState(_, ., _)", () => history.pushState(placeholder, UNTRUSTED));
     // await test("history.pushState(_, _, .)", () => history.pushState(placeholder, UNTRUSTED, `${location}/untrusted`));
+    await test("history.pushState(_, _, .)", () => history.pushState(placeholder, UNTRUSTED, UNTRUSTED_JS_URL));
     await test("history.replaceState(., _, _)", () => history.replaceState(UNTRUSTED, ""));
     await test("history.replaceState(_, ., _)", () => history.replaceState(placeholder, UNTRUSTED));
     // await test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, UNTRUSTED, `${location}/untrusted`));
+    await test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, UNTRUSTED, UNTRUSTED_JS_URL));
     await test("HTMLElement.innerText=.", ({ el }) => el.innerText=UNTRUSTED);
     await test("HTMLElement.outerText=.", ({ el }) => el.outerText=UNTRUSTED);
     await test("HTMLElement.style=.", ({ el }) => el.style=UNTRUSTED);
