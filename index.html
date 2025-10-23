@@ -68,6 +68,8 @@
 
   <script src="./helpers.js"></script>
   <script type="module">
+  const documentExecCommandCommandNames = ["backColor", "bold", "contentReadOnly", "copy", "createLink", "cut", "decreaseFontSize", "defaultParagraphSeparator", "delete", "enableAbsolutePositionEditor", "enableInlineTableEditing", "enableObjectResizing", "fontName", "fontSize", "foreColor", "formatBlock", "forwardDelete", "heading", "highlightColor", "increaseFontSize", "indent", "insertBrOnReturn", "insertHorizontalRule", "insertHTML", "insertImage", "insertOrderedList", "insertUnorderedList", "insertParagraph", "insertText", "italic", "justifyCenter", "justifyFull", "justifyLeft", "justifyRight", "outdent", "paste", "redo", "removeFormat", "selectAll", "strikeThrough", "subscript", "superscript", "underline", "undo", "unlink", "useCSS", "styleWithCSS", "AutoUrlDetect"];
+
   async function test(name, cb) {
     const providers = {
       // Attributes
@@ -133,10 +135,12 @@
     await test("document.createElement(.)", () => document.createElement(UNTRUSTED));
     await test("document.createElementNS(., _)", () => document.createElement(UNTRUSTED, placeholder));
     await test("document.createElementNS(_, .)", () => document.createElement(placeholder, UNTRUSTED));
-    await test("document.domain=.", () => document.domain=UNTRUSTED);
+    await test("document.domain=.", () => document.domain=document.domain);
     await test("document.evaluate(., _, _, _, _)", () => document.evaluate(UNTRUSTED, document, null, XPathResult.ANY_TYPE, null));
     await test("document.execCommand(., _, _)", () => document.execCommand(UNTRUSTED, false, null));
-    await test("document.execCommand(_, _, .)", () => document.execCommand("unlink", false, UNTRUSTED));
+    for (const commandName of documentExecCommandCommandNames) {
+      await test(`document.execCommand('${commandName}', _, .)`, () => document.execCommand(commandName, false, UNTRUSTED));
+    }
     if (hasServiceWorker()) await test("document.location=.", () => document.location=UNTRUSTED);
     await test("document.location=javascript:.", () => document.location=UNTRUSTED_JS_URL);
     await test("document.title=.", () => document.title=UNTRUSTED);
