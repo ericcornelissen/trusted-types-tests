@@ -138,6 +138,7 @@
     await test("document.domain=.", () => document.domain=document.domain);
     await test("document.evaluate(., _, _, _, _)", () => document.evaluate(UNTRUSTED, document, null, XPathResult.ANY_TYPE, null));
     await test("document.execCommand(., _, _)", () => document.execCommand(UNTRUSTED, false, null));
+    await test("document.execCommand('createLink', _, javascript:.)", () => document.execCommand("createLink", false, UNTRUSTED_JS_URL));
     for (const commandName of documentExecCommandCommandNames) {
       await test(`document.execCommand('${commandName}', _, .)`, () => document.execCommand(commandName, false, UNTRUSTED));
     }
