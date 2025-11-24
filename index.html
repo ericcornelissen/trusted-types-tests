@@ -105,7 +105,15 @@
       get select() { return createTestElement("select"); },
       get source() { return createTestElement("source"); },
       get style() { return createTestElement("style"); },
+      get svg() { return createTestElement("svg"); },
       get textarea() { return createTestElement("textarea"); },
+
+      // Miscellaneous
+      get shadowRoot() {
+        const div = createTestElement("div");
+        const shadowRoot = div.attachShadow({ mode: "open" });
+        return shadowRoot;
+      },
     };
 
     await testAndReport(name, () => {
@@ -149,9 +157,10 @@
     await test("document.write(_, .)", () => document.write(trustedHtml, UNTRUSTED));
     await test("document.writeln(.)", () => document.writeln(UNTRUSTED));
     await test("document.writeln(_, .)", () => document.writeln(trustedHtml, UNTRUSTED));
+    await test("Document.parseHTMLUnsafe(., _)", () => Document.parseHTMLUnsafe(UNTRUSTED));
     await test("DOMImplementation.createHTMLDocument(.)", () => document.implementation.createHTMLDocument(UNTRUSTED));
-    await test("DOMParser().parseFromString(., _)", () => (new DOMParser()).parseFromString(UNTRUSTED, trustedHtml));
-    await test("DOMParser().parseFromString(_, .)", () => (new DOMParser()).parseFromString(trustedHtml, "text/html"));
+    await test("DOMParser().parseFromString(., _)", () => (new DOMParser()).parseFromString(UNTRUSTED, "text/html"));
+    await test("DOMParser().parseFromString(_, .)", () => (new DOMParser()).parseFromString(trustedHtml, UNTRUSTED));
     await test("Element.after(., ...)", ({ el }) => el.after(UNTRUSTED));
     await test("Element.after(_, ., ...)", ({ el }) => el.after(trustedHtml, UNTRUSTED));
     await test("Element.append(., ...)", ({ el }) => el.append(UNTRUSTED));
@@ -284,10 +293,6 @@
     await test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name=UNTRUSTED);
     await test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
     await test("import(.)", () => import(UNTRUSTED));
-    await test("importScripts(.)", () => {
-      const script = policy.createScriptURL("./worker-script-importScripts.js");
-      new Worker(script);
-    });
     await test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
     await test("localStorage.setItem(_, .)", () => localStorage.setItem(placeholder, UNTRUSTED));
     if (hasServiceWorker()) await test("Location.assign(.)", () => location.assign(UNTRUSTED_URL));
@@ -312,11 +317,26 @@
     await test("new RegExp(., _)", () => new RegExp(UNTRUSTED));
     await test("new RegExp(_, .)", () => new RegExp(/trusted/, "g"));
     await test("requestFileSystem(., _, _, _)", () => webkitRequestFileSystem(UNTRUSTED, 1, () => {}));
+    if (hasServiceWorker()) await test("ServiceWorkerContainer.register(.)", async () => await navigator.serviceWorker.register(UNTRUSTED_URL));
     await test("sessionStorage.setItem(., _)", () => sessionStorage.setItem(UNTRUSTED, placeholder));
     await test("sessionStorage.setItem(_, .)", () => sessionStorage.setItem(placeholder, UNTRUSTED));
     await test("setInterval(., ...)", () => setInterval(UNTRUSTED));
     await test("setTimeout(., ...)", () => setTimeout(UNTRUSTED));
+    await test("ShadowRoot.innerHTML=.", ({ shadowRoot }) => shadowRoot.innerHTML=UNTRUSTED);
+    await test("ShadowRoot.setHTMLUnsafe(.)", ({ shadowRoot }) => shadowRoot.setHTMLUnsafe(UNTRUSTED));
     await test("new SharedWorker(.)", () => new SharedWorker(UNTRUSTED_URL));
+    await test("SVGAnimatedString.baseVal=.", ({ svg }) => {
+      const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      use.setAttribute('href', '#target');
+      svg.appendChild(use);
+      use.href.baseVal = UNTRUSTED;
+    });
+    await test("SVGAnimatedString.animVal", ({ svg }) => {
+      const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      use.setAttribute('href', '#target');
+      svg.appendChild(use);
+      use.href.animVal = UNTRUSTED_URL;
+    });
     await test("new WebSocket(., _)", () => new WebSocket(`ws://${UNTRUSTED}`));
     await test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(UNTRUSTED); resolve() } catch(error) { reject(error) } } }));
     if (hasServiceWorker()) await test("window.location=.", () => window.location=UNTRUSTED);
@@ -325,6 +345,18 @@
     await test("window.postMessage(., _, _)", () => window.postMessage(UNTRUSTED));
     await test("window.postMessage(_, ., _)", () => window.postMessage(placeholder, "https://example.com/"));
     await test("new Worker(.)", () => new Worker(UNTRUSTED_URL));
+    await test("WorkerGlobalScope.importScripts(.)", () => {
+      const script = policy.createScriptURL("./worker-script-importScripts.js");
+      new Worker(script);
+    });
+    await test("WorkerGlobalScope.setInterval(.)", () => {
+      const script = policy.createScriptURL("./worker-script-setInterval.js");
+      new Worker(script);
+    });
+    await test("WorkerGlobalScope.setTimeout(.)", () => {
+      const script = policy.createScriptURL("./worker-script-setTimeout.js");
+      new Worker(script);
+    });
     await test("new XMLHttpRequest().open(., _, _, _, _)", () => (new XMLHttpRequest()).open(UNTRUSTED, placeholder));
     await test("new XMLHttpRequest().open(_, ., _, _, _)", () => (new XMLHttpRequest()).open(placeholder, UNTRUSTED));
     await test("new XMLHttpRequest().send(.)", () => {

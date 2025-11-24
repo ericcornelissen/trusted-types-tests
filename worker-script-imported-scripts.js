@@ -1,1 +1,1 @@
-console.info("worker helper");
+console.log("untrusted WorkerGlobalScope.importScripts(.)");
