@@ -3,10 +3,6 @@
 let policy;
 let trustedElement, trustedHtml, trustedScript, trustedScriptURL;
 
-function hasTrustedTypes() {
-  return typeof trustedTypes !== "undefined";
-}
-
 if (hasTrustedTypes()) {
   policy = trustedTypes.createPolicy("test-policy", {
     createHTML: (input) => input,

@@ -1,0 +1,311 @@
+// SPDX-License-Identifier: MPL-2.0
+
+const documentExecCommandCommandNames = ["backColor", "bold", "contentReadOnly", "copy", "createLink", "cut", "decreaseFontSize", "defaultParagraphSeparator", "delete", "enableAbsolutePositionEditor", "enableInlineTableEditing", "enableObjectResizing", "fontName", "fontSize", "foreColor", "formatBlock", "forwardDelete", "heading", "highlightColor", "increaseFontSize", "indent", "insertBrOnReturn", "insertHorizontalRule", "insertHTML", "insertImage", "insertOrderedList", "insertUnorderedList", "insertParagraph", "insertText", "italic", "justifyCenter", "justifyFull", "justifyLeft", "justifyRight", "outdent", "paste", "redo", "removeFormat", "selectAll", "strikeThrough", "subscript", "superscript", "underline", "undo", "unlink", "useCSS", "styleWithCSS", "AutoUrlDetect"];
+
+async function test(name, cb) {
+  const providers = {
+    // Attributes
+    get attr() { return createTestAttribute("attr"); },
+    get onclick() { return createTestAttribute("onclick"); },
+
+    // Elements
+    get el() { return createTestElement("el"); },
+    get a() { return createTestElement("a"); },
+    get area() { return createTestElement("area"); },
+    get base() { return createTestElement("base"); },
+    get button() { return createTestElement("button"); },
+    get data() { return createTestElement("data"); },
+    get embed() { return createTestElement("embed"); },
+    get fieldset() { return createTestElement("fieldset"); },
+    get form() { return createTestElement("form"); },
+    get iframe() { return createTestElement("iframe"); },
+    get img() { return createTestElement("img"); },
+    get input() { return createTestElement("input"); },
+    get li() { return createTestElement("li"); },
+    get link() { return createTestElement("link"); },
+    get map() { return createTestElement("map"); },
+    get menu() { return createTestElement("menu"); },
+    get meta() { return createTestElement("meta"); },
+    get meter() { return createTestElement("meter"); },
+    get object() { return createTestElement("object"); },
+    get ol() { return createTestElement("ol"); },
+    get option() { return createTestElement("option"); },
+    get output() { return createTestElement("output"); },
+    get param() { return createTestElement("param"); },
+    get progress() { return createTestElement("progress"); },
+    get script() { return createTestElement("script"); },
+    get select() { return createTestElement("select"); },
+    get source() { return createTestElement("source"); },
+    get style() { return createTestElement("style"); },
+    get svg() { return createTestElement("svg"); },
+    get textarea() { return createTestElement("textarea"); },
+
+    // Miscellaneous
+    get shadowRoot() {
+      const div = createTestElement("div");
+      const shadowRoot = div.attachShadow({ mode: "open" });
+      return shadowRoot;
+    },
+  };
+
+  await testAndReport(name, () => {
+    const r = cb(providers);
+    if (r instanceof Promise) r.catch(() => null);
+  });
+}
+
+if (hasTrustedTypes()) {
+  const placeholder = "placeholder";
+
+  await test("new AsyncFunction(.)", () => {
+    const AsyncFunction = (async function () { }).constructor;
+    new AsyncFunction(UNTRUSTED);
+  });
+  await test("new AsyncGeneratorFunction(.)", () => {
+    const AsyncGeneratorFunction = (async function* () { }).constructor;
+    new AsyncGeneratorFunction(UNTRUSTED);
+  });
+  await test("attr.value=.", ({ attr }) => attr.value = UNTRUSTED);
+  await test("attr[onclick].value=.", ({ onclick }) => onclick.value = UNTRUSTED);
+  await test("CSSStyleDeclaration.cssText=.", ({ el }) => el.style.cssText = UNTRUSTED);
+  await test("document.cookie=.", () => document.cookie = UNTRUSTED);
+  await test("document.createAttribute(.)", () => document.createAttribute(UNTRUSTED));
+  await test("document.createAttributeNS(., _)", () => document.createAttributeNS(UNTRUSTED, placeholder));
+  await test("document.createAttributeNS(_, .)", () => document.createAttributeNS(placeholder, UNTRUSTED));
+  await test("document.createElement(.)", () => document.createElement(UNTRUSTED));
+  await test("document.createElementNS(., _)", () => document.createElement(UNTRUSTED, placeholder));
+  await test("document.createElementNS(_, .)", () => document.createElement(placeholder, UNTRUSTED));
+  await test("document.domain=.", () => document.domain = document.domain);
+  await test("document.evaluate(., _, _, _, _)", () => document.evaluate(UNTRUSTED, document, null, XPathResult.ANY_TYPE, null));
+  await test("document.execCommand(., _, _)", () => document.execCommand(UNTRUSTED, false, null));
+  await test("document.execCommand('createLink', _, javascript:.)", () => document.execCommand("createLink", false, UNTRUSTED_JS_URL));
+  for (const commandName of documentExecCommandCommandNames) {
+    await test(`document.execCommand('${commandName}', _, .)`, () => document.execCommand(commandName, false, UNTRUSTED));
+  }
+  if (hasServiceWorker()) await test("document.location=.", () => document.location = UNTRUSTED);
+  await test("document.location=javascript:.", () => document.location = UNTRUSTED_JS_URL);
+  await test("document.title=.", () => document.title = UNTRUSTED);
+  await test("document.write(.)", () => document.write(UNTRUSTED));
+  await test("document.write(_, .)", () => document.write(trustedHtml, UNTRUSTED));
+  await test("document.writeln(.)", () => document.writeln(UNTRUSTED));
+  await test("document.writeln(_, .)", () => document.writeln(trustedHtml, UNTRUSTED));
+  await test("Document.parseHTMLUnsafe(., _)", () => Document.parseHTMLUnsafe(UNTRUSTED));
+  await test("DOMImplementation.createHTMLDocument(.)", () => document.implementation.createHTMLDocument(UNTRUSTED));
+  await test("DOMParser().parseFromString(., _)", () => (new DOMParser()).parseFromString(UNTRUSTED, "text/html"));
+  await test("DOMParser().parseFromString(_, .)", () => (new DOMParser()).parseFromString(trustedHtml, UNTRUSTED));
+  await test("Element.after(., ...)", ({ el }) => el.after(UNTRUSTED));
+  await test("Element.after(_, ., ...)", ({ el }) => el.after(trustedHtml, UNTRUSTED));
+  await test("Element.append(., ...)", ({ el }) => el.append(UNTRUSTED));
+  await test("Element.append(_, ., ...)", ({ el }) => el.append(trustedHtml, UNTRUSTED));
+  await test("Element.before(., ...)", ({ el }) => el.before(UNTRUSTED));
+  await test("Element.before(_, ., ...)", ({ el }) => el.before(trustedHtml, UNTRUSTED));
+  await test("Element.innerHTML=.", ({ el }) => el.innerHTML = UNTRUSTED);
+  await test("Element.insertAdjacentElement(., _)", ({ el }) => el.insertAdjacentElement("afterbegin", trustedElement));
+  await test("Element.insertAdjacentElement(_, .)", ({ el }) => el.insertAdjacentElement("afterbegin", UNTRUSTED));
+  await test("Element.insertAdjacentHTML(., _)", ({ el }) => el.insertAdjacentHTML("afterbegin", trustedHtml));
+  await test("Element.insertAdjacentHTML(_, .)", ({ el }) => el.insertAdjacentHTML("afterbegin", UNTRUSTED));
+  await test("Element.insertAdjacentText(., _)", ({ el }) => el.insertAdjacentText("afterbegin", trustedHtml));
+  await test("Element.insertAdjacentText(_, .)", ({ el }) => el.insertAdjacentText("afterbegin", UNTRUSTED));
+  await test("Element.onclick=.", ({ el }) => el.onclick = UNTRUSTED);
+  await test("Element.outerHTML=.", ({ el }) => el.outerHTML = UNTRUSTED);
+  await test("Element.setAttribute(., _)", ({ el }) => el.setAttribute(UNTRUSTED, trustedHtml));
+  await test("Element.setAttribute(_, .)", ({ el }) => el.setAttribute(trustedHtml, UNTRUSTED));
+  await test("Element.setAttribute('onclick', .)", ({ el }) => el.setAttribute("onclick", UNTRUSTED));
+  await test("Element.setAttributeNS(., _, _)", ({ el }) => el.setAttributeNS(UNTRUSTED, trustedHtml, trustedHtml));
+  await test("Element.setAttributeNS(_, ., _)", ({ el }) => el.setAttributeNS(trustedHtml, UNTRUSTED, trustedHtml));
+  await test("Element.setAttributeNS(_, _, .)", ({ el }) => el.setAttributeNS(trustedHtml, trustedHtml, UNTRUSTED));
+  await test("Element.setAttributeNS('', 'onclick', .)", ({ el }) => el.setAttributeNS("", "onclick", UNTRUSTED));
+  await test("Element.setHTMLUnsafe(., _)", ({ el }) => el.setHTMLUnsafe(UNTRUSTED));
+  await test("eval(.)", () => eval(UNTRUSTED));
+  await test("new EventSource(., _)", () => new EventSource(UNTRUSTED));
+  await test("fetch(., _)", () => fetch(UNTRUSTED));
+  await test("new Function(.)", () => new Function(UNTRUSTED));
+  await test("new GeneratorFunction(.)", () => {
+    const GeneratorFunction = (function* () { }).constructor;
+    new GeneratorFunction(UNTRUSTED);
+  });
+  await test("new FileReader().readAsArrayBuffer()", () => (new FileReader()).readAsArrayBuffer(UNTRUSTED));
+  await test("new FileReader().readAsBinaryString()", () => (new FileReader()).readAsBinaryString(UNTRUSTED));
+  await test("new FileReader().readAsDataURL()", () => (new FileReader()).readAsDataURL(UNTRUSTED));
+  await test("new FileReader().readAsText()", () => (new FileReader()).readAsText(UNTRUSTED));
+  await test("history.pushState(., _, _)", () => history.pushState(UNTRUSTED, ""));
+  await test("history.pushState(_, ., _)", () => history.pushState(placeholder, UNTRUSTED));
+  // await test("history.pushState(_, _, .)", () => history.pushState(placeholder, UNTRUSTED, `${location}/untrusted`));
+  await test("history.pushState(_, _, .)", () => history.pushState(placeholder, UNTRUSTED, UNTRUSTED_JS_URL));
+  await test("history.replaceState(., _, _)", () => history.replaceState(UNTRUSTED, ""));
+  await test("history.replaceState(_, ., _)", () => history.replaceState(placeholder, UNTRUSTED));
+  // await test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, UNTRUSTED, `${location}/untrusted`));
+  await test("history.replaceState(_, _, .)", () => history.replaceState(placeholder, UNTRUSTED, UNTRUSTED_JS_URL));
+  await test("HTMLElement.innerText=.", ({ el }) => el.innerText = UNTRUSTED);
+  await test("HTMLElement.outerText=.", ({ el }) => el.outerText = UNTRUSTED);
+  await test("HTMLElement.style=.", ({ el }) => el.style = UNTRUSTED);
+  await test("HTMLElement.style.cssText=.", ({ el }) => el.style.cssText = UNTRUSTED);
+  if (hasServiceWorker()) await test("HTMLAnchorElement.href=.", ({ a }) => {
+    a.href = UNTRUSTED_URL;
+    a.click();
+  });
+  await test("HTMLAnchorElement.href=javascript:.", ({ a }) => {
+    a.href = UNTRUSTED_JS_URL;
+    a.click();
+  });
+  await test("HTMLAnchorElement.target=.", ({ a }) => a.target = UNTRUSTED);
+  await test("HTMLAreaElement.target=.", ({ area }) => area.target = UNTRUSTED);
+  await test("HTMLBaseElement.target=.", ({ base }) => base.target = UNTRUSTED);
+  await test("HTMLButtonElement.name=.", ({ button }) => button.name = UNTRUSTED);
+  if (hasServiceWorker()) await test("HTMLButtonElement.formAction=.", ({ form, button }) => {
+    button.formAction = UNTRUSTED_URL;
+    form.appendChild(button);
+    button.click();
+  });
+  await test("HTMLButtonElement.formAction=javascript:.", ({ form, button }) => {
+    button.formAction = UNTRUSTED_JS_URL;
+    form.appendChild(button);
+    button.click();
+  });
+  await test("HTMLButtonElement.type=.", ({ button }) => button.type = UNTRUSTED);
+  await test("HTMLButtonElement.value=.", ({ button }) => button.value = UNTRUSTED);
+  await test("HTMLDataElement.value=.", ({ data }) => data.value = UNTRUSTED);
+  await test("HTMLEmbedElement.src=.", ({ embed }) => embed.src = UNTRUSTED);
+  await test("HTMLEmbedElement.type=.", ({ embed }) => embed.type = UNTRUSTED);
+  await test("HTMLFormElement.action=.", ({ form }) => form.action = UNTRUSTED);
+  await test("HTMLFormElement.method=.", ({ form }) => form.method = UNTRUSTED);
+  await test("HTMLFormElement.name=.", ({ form }) => form.name = UNTRUSTED);
+  await test("HTMLFormElement.target=.", ({ form }) => form.target = UNTRUSTED);
+  await test("HTMLFieldsetElement.name=.", ({ fieldset }) => fieldset.name = UNTRUSTED);
+  await test("HTMLIFrameElement.name=.", ({ iframe }) => iframe.name = UNTRUSTED);
+  await test("HTMLIFrameElement.src=.", ({ iframe }) => iframe.src = UNTRUSTED);
+  await test("HTMLIFrameElement.srcdoc=.", ({ iframe }) => iframe.srcdoc = UNTRUSTED);
+  await test("HTMLImageElement.src=.", ({ img }) => img.src = UNTRUSTED);
+  await test("HTMLImageElement.srcset=.", ({ img }) => img.srcset = UNTRUSTED);
+  await test("HTMLInputElement.name=.", ({ input }) => input.name = UNTRUSTED);
+  if (hasServiceWorker()) await test("HTMLInputElement.formAction=.", ({ form, input }) => {
+    input.formAction = UNTRUSTED_URL;
+    input.type = "submit";
+    form.appendChild(input);
+    input.click();
+  });
+  await test("HTMLInputElement.formAction=javascript:.", ({ form, input }) => {
+    input.formAction = UNTRUSTED_JS_URL;
+    input.type = "submit";
+    form.appendChild(input);
+    input.click();
+  });
+  await test("HTMLInputElement.type=.", ({ input }) => input.type = UNTRUSTED);
+  await test("HTMLInputElement.value=.", ({ input }) => input.value = UNTRUSTED);
+  await test("HTMLLinkElement.href=.", ({ link }) => {
+    link.as = "script";
+    link.rel = "preload";
+    link.href = UNTRUSTED;
+  });
+  await test("HTMLLinkElement.type=.", ({ link }) => link.type = UNTRUSTED);
+  await test("HTMLListItemElement.value=.", ({ li }) => li.value = UNTRUSTED);
+  await test("HTMLMapElement.name=.", ({ map }) => map.name = UNTRUSTED);
+  await test("HTMLMenuElement.type=.", ({ menu }) => menu.type = UNTRUSTED);
+  await test("HTMLMetaElement.name=.", ({ meta }) => meta.name = UNTRUSTED);
+  await test("HTMLMeterElement.value=.", ({ meter }) => meter.value = 3.14);
+  await test("HTMLObjectElement.codeBase=.", ({ object }) => object.codeBase = UNTRUSTED);
+  await test("HTMLObjectElement.data=.", ({ object }) => object.data = UNTRUSTED);
+  await test("HTMLObjectElement.name=.", ({ object }) => object.name = UNTRUSTED);
+  await test("HTMLObjectElement.type=.", ({ object }) => object.type = UNTRUSTED);
+  await test("HTMLOListElement.type=.", ({ ol }) => ol.type = UNTRUSTED);
+  await test("HTMLOptionElement.value=.", ({ option }) => option.value = UNTRUSTED);
+  await test("HTMLOutputElement.name=.", ({ output }) => output.name = UNTRUSTED);
+  await test("HTMLParamElement.value=.", ({ param }) => param.value = UNTRUSTED);
+  await test("HTMLParamElement.name=.", ({ param }) => param.name = UNTRUSTED);
+  await test("HTMLProgressElement.value=.", ({ progress }) => progress.value = 3.14);
+  await test("HTMLScriptElement.innerHTML=.", ({ script }) => script.innerHTML = UNTRUSTED);
+  await test("HTMLScriptElement.innerText=.", ({ script }) => script.innerText = UNTRUSTED);
+  await test("HTMLScriptElement.src=.", ({ script }) => script.src = UNTRUSTED);
+  await test("HTMLScriptElement.text=.", ({ script }) => script.text = UNTRUSTED);
+  await test("HTMLScriptElement.type=.", ({ script }) => script.type = UNTRUSTED);
+  await test("HTMLScriptElement.textContent=.", ({ script }) => script.textContent = UNTRUSTED);
+  await test("HTMLSelectElement.name=.", ({ select }) => select.name = UNTRUSTED);
+  await test("HTMLSourceElement.type=.", ({ source }) => source.type = UNTRUSTED);
+  await test("HTMLStyleElement.type=.", ({ style }) => style.type = UNTRUSTED);
+  await test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name = UNTRUSTED);
+  await test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
+  await test("import(.)", () => import(UNTRUSTED));
+  await test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
+  await test("localStorage.setItem(_, .)", () => localStorage.setItem(placeholder, UNTRUSTED));
+  if (hasServiceWorker()) await test("Location.assign(.)", () => location.assign(UNTRUSTED_URL));
+  await test("Location.assign(javascript:.)", () => location.assign(UNTRUSTED_JS_URL));
+  await test("Location.hash=.", () => location.hash = UNTRUSTED);
+  if (hasServiceWorker()) await test("Location.host=.", () => location.host = UNTRUSTED);
+  if (hasServiceWorker()) await test("Location.hostname=.", () => location.hostname = UNTRUSTED);
+  if (hasServiceWorker()) await test("Location.href=.", () => location.href = UNTRUSTED_URL);
+  await test("Location.href=javascript:.", () => location.href = UNTRUSTED_JS_URL);
+  if (hasServiceWorker()) await test("Location.pathname=.", () => location.pathname = UNTRUSTED);
+  await test("Location.port=.", () => location.port = UNTRUSTED);
+  await test("Location.protocol=.", () => location.protocol = UNTRUSTED);
+  if (hasServiceWorker()) await test("Location.replace(.)", () => location.replace(UNTRUSTED_URL));
+  await test("Location.replace(javascript:.)", () => location.replace(UNTRUSTED_JS_URL));
+  await test("Location.search=.", () => location.search = UNTRUSTED);
+  await test("Navigator.sendBeacon(., _)", () => navigator.sendBeacon(`http://${UNTRUSTED}`));
+  await test("Navigator.sendBeacon(_, )", () => navigator.sendBeacon("https://example.com/", UNTRUSTED));
+  await test("Node.appendChild(.)", ({ el }) => el.appendChild(UNTRUSTED));
+  await test("Node.replaceChild(., _)", ({ el }) => el.appendChild(UNTRUSTED, trustedHtml));
+  await test("Node.textContent=.", ({ el }) => el.textContent = UNTRUSTED);
+  await test("Range.createContextualFragment(.)", () => document.createRange().createContextualFragment(UNTRUSTED));
+  await test("new RegExp(., _)", () => new RegExp(UNTRUSTED));
+  await test("new RegExp(_, .)", () => new RegExp(/trusted/, "g"));
+  await test("requestFileSystem(., _, _, _)", () => webkitRequestFileSystem(UNTRUSTED, 1, () => { }));
+  if (hasServiceWorker()) await test("ServiceWorkerContainer.register(.)", async () => await navigator.serviceWorker.register(UNTRUSTED_URL));
+  await test("sessionStorage.setItem(., _)", () => sessionStorage.setItem(UNTRUSTED, placeholder));
+  await test("sessionStorage.setItem(_, .)", () => sessionStorage.setItem(placeholder, UNTRUSTED));
+  await test("setInterval(., ...)", () => setInterval(UNTRUSTED));
+  await test("setTimeout(., ...)", () => setTimeout(UNTRUSTED));
+  await test("ShadowRoot.innerHTML=.", ({ shadowRoot }) => shadowRoot.innerHTML = UNTRUSTED);
+  await test("ShadowRoot.setHTMLUnsafe(.)", ({ shadowRoot }) => shadowRoot.setHTMLUnsafe(UNTRUSTED));
+  await test("new SharedWorker(.)", () => new SharedWorker(UNTRUSTED_URL));
+  await test("SVGAnimatedString.baseVal=.", ({ svg }) => {
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute('href', '#target');
+    svg.appendChild(use);
+    use.href.baseVal = UNTRUSTED;
+  });
+  await test("SVGAnimatedString.animVal", ({ svg }) => {
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute('href', '#target');
+    svg.appendChild(use);
+    use.href.animVal = UNTRUSTED_URL;
+  });
+  await test("new WebSocket(., _)", () => new WebSocket(`ws://${UNTRUSTED}`));
+  await test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(UNTRUSTED); resolve() } catch (error) { reject(error) } } }));
+  if (hasServiceWorker()) await test("window.location=.", () => window.location = UNTRUSTED);
+  await test("window.location=javascript:.", () => window.location = UNTRUSTED_JS_URL);
+  await test("window.open(.)", () => window.open(UNTRUSTED));
+  await test("window.postMessage(., _, _)", () => window.postMessage(UNTRUSTED));
+  await test("window.postMessage(_, ., _)", () => window.postMessage(placeholder, "https://example.com/"));
+  await test("new Worker(.)", () => new Worker(UNTRUSTED_URL));
+  await test("WorkerGlobalScope.importScripts(.)", () => {
+    const script = policy.createScriptURL("./worker-script-importScripts.js");
+    new Worker(script);
+  });
+  await test("WorkerGlobalScope.setInterval(.)", () => {
+    const script = policy.createScriptURL("./worker-script-setInterval.js");
+    new Worker(script);
+  });
+  await test("WorkerGlobalScope.setTimeout(.)", () => {
+    const script = policy.createScriptURL("./worker-script-setTimeout.js");
+    new Worker(script);
+  });
+  await test("new XMLHttpRequest().open(., _, _, _, _)", () => (new XMLHttpRequest()).open(UNTRUSTED, placeholder));
+  await test("new XMLHttpRequest().open(_, ., _, _, _)", () => (new XMLHttpRequest()).open(placeholder, UNTRUSTED));
+  await test("new XMLHttpRequest().send(.)", () => {
+    const req = new XMLHttpRequest();
+    req.open("GET", "/");
+    req.send(UNTRUSTED);
+  });
+  await test("new XMLHttpRequest().setRequestHeader(., _)", () => {
+    const req = new XMLHttpRequest();
+    req.open("GET", "/");
+    req.setRequestHeader(UNTRUSTED, placeholder);
+  });
+  await test("new XMLHttpRequest().setRequestHeader(_, .)", () => {
+    const req = new XMLHttpRequest();
+    req.open("GET", "/");
+    req.setRequestHeader(placeholder, UNTRUSTED);
+  });
+} else {
+  document.getElementById("no-trusted-types").hidden = false;
+}
