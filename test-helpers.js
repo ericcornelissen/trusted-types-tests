@@ -66,7 +66,7 @@ async function testAndReport(name, cb) {
     }
 
     resolve();
-  }, 1);
+  }, 2);
 
   try {
     cb();

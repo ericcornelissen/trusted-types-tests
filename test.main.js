@@ -78,7 +78,25 @@ if (hasTrustedTypes()) {
   await test("document.domain=.", () => document.domain = document.domain);
   await test("document.evaluate(., _, _, _, _)", () => document.evaluate(UNTRUSTED, document, null, XPathResult.ANY_TYPE, null));
   await test("document.execCommand(., _, _)", () => document.execCommand(UNTRUSTED, false, null));
-  await test("document.execCommand('createLink', _, javascript:.)", () => document.execCommand("createLink", false, UNTRUSTED_JS_URL));
+  await test("document.execCommand('createLink', _, javascript:.)", () => {
+    const element = document.createElement("span");
+    element.innerText = "Hello world!";
+    element.contentEditable = true;
+    document.body.appendChild(element);
+
+    const range = document.createRange();
+    range.selectNodeContents(element);
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    document.execCommand("createLink", false, "javascript:alert('XSS')");
+
+    element.contentEditable = false;
+    element.querySelector("a").click();
+    document.body.removeChild(element);
+  });
   for (const commandName of documentExecCommandCommandNames) {
     await test(`document.execCommand('${commandName}', _, .)`, () => document.execCommand(commandName, false, UNTRUSTED));
   }
