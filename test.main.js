@@ -174,6 +174,7 @@ if (hasTrustedTypes()) {
   await test("HTMLFieldsetElement.name=.", ({ fieldset }) => fieldset.name = UNTRUSTED);
   await test("HTMLIFrameElement.name=.", ({ iframe }) => iframe.name = UNTRUSTED);
   await test("HTMLIFrameElement.src=.", ({ iframe }) => iframe.src = UNTRUSTED);
+  await test("HTMLIFrameElement.src=javascript:.", ({ iframe }) => iframe.src = UNTRUSTED_JS_URL);
   await test("HTMLIFrameElement.srcdoc=.", ({ iframe }) => iframe.srcdoc = UNTRUSTED);
   await test("HTMLImageElement.src=.", ({ img }) => img.src = UNTRUSTED);
   await test("HTMLImageElement.srcset=.", ({ img }) => img.srcset = UNTRUSTED);
