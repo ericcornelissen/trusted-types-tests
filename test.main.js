@@ -232,6 +232,7 @@ if (hasTrustedTypes()) {
   await test("HTMLParamElement.value=.", ({ param }) => param.value = UNTRUSTED);
   await test("HTMLParamElement.name=.", ({ param }) => param.name = UNTRUSTED);
   await test("HTMLProgressElement.value=.", ({ progress }) => progress.value = 3.14);
+  await test("HTMLScriptElement.href=.", ({ script }) => script.href = UNTRUSTED);
   await test("HTMLScriptElement.innerHTML=.", ({ script }) => script.innerHTML = UNTRUSTED);
   await test("HTMLScriptElement.innerText=.", ({ script }) => script.innerText = UNTRUSTED);
   await test("HTMLScriptElement.src=.", ({ script }) => script.src = UNTRUSTED);
@@ -276,17 +277,64 @@ if (hasTrustedTypes()) {
   await test("ShadowRoot.innerHTML=.", ({ shadowRoot }) => shadowRoot.innerHTML = UNTRUSTED);
   await test("ShadowRoot.setHTMLUnsafe(.)", ({ shadowRoot }) => shadowRoot.setHTMLUnsafe(UNTRUSTED));
   await test("new SharedWorker(.)", () => new SharedWorker(UNTRUSTED_URL));
-  await test("SVGAnimatedString.baseVal=.", ({ svg }) => {
+  await test("SVGAnimatedString.baseVal=. (<script>)", ({ svg }) => {
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    use.setAttribute('href', '#target');
+    svg.appendChild(use);
+    use.href.baseVal = UNTRUSTED;
+  });
+  await test("SVGAnimatedString.animVal=. (<script>)", ({ svg }) => {
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    use.setAttribute('href', '#target');
+    svg.appendChild(use);
+    use.href.animVal = UNTRUSTED_URL;
+  });
+  await test("SVGAnimatedString.baseVal=. (<use>)", ({ svg }) => {
     const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
     use.setAttribute('href', '#target');
     svg.appendChild(use);
     use.href.baseVal = UNTRUSTED;
   });
-  await test("SVGAnimatedString.animVal", ({ svg }) => {
+  await test("SVGAnimatedString.animVal=. (<use>)", ({ svg }) => {
     const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
     use.setAttribute('href', '#target');
     svg.appendChild(use);
     use.href.animVal = UNTRUSTED_URL;
+  });
+  await test("SVGScriptElement.href=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.href = UNTRUSTED
+  });
+  await test("SVGScriptElement.innerHTML=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.innerHTML = UNTRUSTED;
+  });
+  await test("SVGScriptElement.innerText=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.innerText = UNTRUSTED;
+  });
+  await test("SVGScriptElement.src=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.src = UNTRUSTED;
+  });
+  await test("SVGScriptElement.text=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.text = UNTRUSTED;
+  });
+  await test("SVGScriptElement.type=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.type = UNTRUSTED;
+  });
+  await test("SVGScriptElement.textContent=.", ({ svg }) => {
+    const script = document.createElementNS("http://www.w3.org/2000/svg", "script");
+    svg.appendChild(script);
+    script.textContent = UNTRUSTED;
   });
   await test("new WebSocket(., _)", () => new WebSocket(`ws://${UNTRUSTED}`));
   await test("new WebSocket(., _)", () => new Promise((resolve, reject) => { const ws = new WebSocket("https://echo.websocket.org/"); ws.onopen = () => { try { ws.send(UNTRUSTED); resolve() } catch (error) { reject(error) } } }));
