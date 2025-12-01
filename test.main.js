@@ -235,6 +235,10 @@ if (hasTrustedTypes()) {
   await test("HTMLScriptElement.href=.", ({ script }) => script.href = UNTRUSTED);
   await test("HTMLScriptElement.innerHTML=.", ({ script }) => script.innerHTML = UNTRUSTED);
   await test("HTMLScriptElement.innerText=.", ({ script }) => script.innerText = UNTRUSTED);
+  await test("HTMLScriptElement.insertAdjacentText('beforebegin', _)", ({ script }) => script.insertAdjacentText("beforebegin", UNTRUSTED));
+  await test("HTMLScriptElement.insertAdjacentText('afterbegin', _)", ({ script }) => script.insertAdjacentText("afterbegin", UNTRUSTED));
+  await test("HTMLScriptElement.insertAdjacentText('beforeend', .)", ({ script }) => script.insertAdjacentText("beforeend", UNTRUSTED));
+  await test("HTMLScriptElement.insertAdjacentText('afterend', .)", ({ script }) => script.insertAdjacentText("afterend", UNTRUSTED));
   await test("HTMLScriptElement.src=.", ({ script }) => script.src = UNTRUSTED);
   await test("HTMLScriptElement.text=.", ({ script }) => script.text = UNTRUSTED);
   await test("HTMLScriptElement.type=.", ({ script }) => script.type = UNTRUSTED);
