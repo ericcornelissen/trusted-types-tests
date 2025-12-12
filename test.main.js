@@ -245,6 +245,8 @@ if (hasTrustedTypes()) {
   await test("HTMLScriptElement.textContent=.", ({ script }) => script.textContent = UNTRUSTED);
   await test("HTMLSelectElement.name=.", ({ select }) => select.name = UNTRUSTED);
   await test("HTMLSourceElement.type=.", ({ source }) => source.type = UNTRUSTED);
+  await test("HTMLStyleElement.innerHTML=.", ({ style }) => style.innerHTML = UNTRUSTED);
+  await test("HTMLStyleElement.outerHTML=.", ({ style }) => style.outerHTML = UNTRUSTED);
   await test("HTMLStyleElement.type=.", ({ style }) => style.type = UNTRUSTED);
   await test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name = UNTRUSTED);
   await test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
