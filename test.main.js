@@ -248,7 +248,9 @@ if (hasTrustedTypes()) {
   await test("HTMLStyleElement.innerHTML=.", ({ style }) => style.innerHTML = UNTRUSTED);
   await test("HTMLStyleElement.outerHTML=.", ({ style }) => style.outerHTML = UNTRUSTED);
   await test("HTMLStyleElement.type=.", ({ style }) => style.type = UNTRUSTED);
+  await test("HTMLTextAreaElement.innerHTML=.", ({ textarea }) => textarea.innerHTML = UNTRUSTED);
   await test("HTMLTextAreaElement.name=.", ({ textarea }) => textarea.name = UNTRUSTED);
+  await test("HTMLTextAreaElement.outerHTML=.", ({ textarea }) => textarea.outerHTML = UNTRUSTED);
   await test("JSON.parse(., _)", () => JSON.parse(`["${UNTRUSTED}"]`));
   await test("import(.)", () => import(UNTRUSTED));
   await test("localStorage.setItem(., _)", () => localStorage.setItem(UNTRUSTED, placeholder));
